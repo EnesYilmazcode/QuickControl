@@ -255,6 +255,28 @@ class RapidInputTests(unittest.TestCase):
         self.assertEqual(self.calls, [])
         self.owner.record_step_current.assert_not_called()
 
+    def test_tab_waits_for_focus_to_move_before_next_field(self):
+        rects = iter([(0, 0, 10, 10), (0, 0, 10, 10), (0, 20, 10, 30)])
+        def focused():
+            r = next(rects)
+            return SimpleNamespace(BoundingRectangle=SimpleNamespace(
+                left=r[0], top=r[1], right=r[2], bottom=r[3]))
+        desktop = SimpleNamespace(_validate_screen_point=Mock())
+        uia = SimpleNamespace(Click=Mock(), GetFocusedControl=focused)
+        type_text(desktop, (1, 2), 'a	b', owner=self.owner, uia=uia, sender=self.sender,
+                  as_bool=lambda value, name: bool(value), tab_settle=0)
+        self.assertEqual(self.calls[1], key_pair(9))
+        self.assertEqual(len(self.calls), 3)
+
+    def test_tab_without_focus_move_stops_remaining_fields(self):
+        control = SimpleNamespace(BoundingRectangle=SimpleNamespace(left=0, top=0, right=10, bottom=10))
+        desktop = SimpleNamespace(_validate_screen_point=Mock())
+        uia = SimpleNamespace(Click=Mock(), GetFocusedControl=Mock(return_value=control))
+        with self.assertRaisesRegex(RuntimeError, 'Focus did not move'):
+            type_text(desktop, (1, 2), 'a	b', owner=self.owner, uia=uia, sender=self.sender,
+                      as_bool=lambda value, name: bool(value), tab_timeout=0.01)
+        self.assertEqual(len(self.calls), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

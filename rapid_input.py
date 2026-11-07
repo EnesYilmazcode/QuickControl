@@ -125,7 +125,7 @@ def send_batch(owner, sender, events):
 def type_text(desktop, loc, text, caret_position='idle', clear=False,
               press_enter=False, *, owner, uia, sender, as_bool, chunk_size=32,
               foreground=None, focus_wait=None, verify_focus=False,
-              verification_timeout=0.75):
+              verification_timeout=0.75, tab_settle=0.03, tab_timeout=0.5):
     """Desktop.type implementation with explicit dependencies for offline tests."""
     clear = as_bool(clear, 'clear')
     press_enter = as_bool(press_enter, 'press_enter')
@@ -202,8 +202,37 @@ def type_text(desktop, loc, text, caret_position='idle', clear=False,
         # everything in the ledger allows cleanup after any partial prefix.
         ctrl = KeyEvent(vk=17)
         emit([ctrl, *key_pair(65), ctrl.up(), *key_pair(8)])
+    def focus_identity():
+        try:
+            rect = uia.GetFocusedControl().BoundingRectangle
+            return (rect.left, rect.top, rect.right, rect.bottom)
+        except Exception:
+            return None
+
+    def await_focus_move(before):
+        # Keys sent before the page finishes moving focus can be dropped
+        # (seen live on Google Advanced Search), so each field waits.
+        if before is None:
+            time.sleep(tab_settle)
+            return
+        deadline = time.monotonic() + tab_timeout
+        while True:
+            check_cancelled()
+            owner.checkpoint_current()
+            current = focus_identity()
+            if current is not None and current != before:
+                break
+            if time.monotonic() >= deadline:
+                raise RuntimeError('Focus did not move after Tab; remaining text was not entered')
+            time.sleep(0.005)
+        time.sleep(tab_settle)
+
+    tab = key_pair(9)
     for events in text_chunks(text, chunk_size):
+        before = focus_identity() if events == tab else None
         emit(events)
+        if events == tab:
+            await_focus_move(before)
     if verify_focus:
         expected = text.replace('\r', '')
         wait_until(lambda: focused_pattern().Value,
