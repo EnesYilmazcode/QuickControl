@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+artifacts/
+fixture-result.json
+fallback-comparison.json
+*.local.toml
