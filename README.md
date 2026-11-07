@@ -1,20 +1,22 @@
 <h1 align="center">QuickControl</h1>
 
 <p align="center"><b>Faster Windows control for AI agents.</b><br>
-Batch desktop actions through one MCP connection and measure where the time goes.</p>
+Enter text and fill stable forms with fewer waits and tool calls.</p>
 
-Starting a desktop server for every command adds seconds before anything happens.
-QuickControl keeps one connection open for a sequence of Windows MCP calls, saves
-each result, and stops the sequence when a tool fails. In a local test, three
-screenshots took **25.1 seconds separately and 10.1 seconds in one batch**.
+In local GUI tests, an eight-field form fell from **17.99 to 1.27 seconds**.
+A real Notepad edit and save fell from **13.79 to 2.83 seconds**. Each number
+is the median of three exact-outcome passes per profile. Startup, navigation
+and agent reasoning are excluded; gains vary by task.
+
+[![Original-speed desktop comparison](assets/quickcontrol-demo.gif)](assets/quickcontrol-demo.mp4)
+
+[Watch the video](assets/quickcontrol-demo.mp4) | [Results and failed experiments](measurements/rd-report.md)
 
 Built on [CursorTouch's Windows MCP](https://github.com/CursorTouch/Windows-MCP).
-Windows MCP provides the desktop tools, screenshots, accessibility tree, and
-control ownership checks. I added connection reuse for command sequences,
-per-call timings, separate output files, coordinate conversion checks, and a
-benchmark harness. There is also an experimental profile for faster short-text
-entry. This repository contains the client and experiments; it depends on the
-upstream server.
+Windows MCP provides desktop tools, screenshots, accessibility and control
+ownership. I added bounded native Unicode input, observed form traversal,
+validated action sequences, connection reuse, per-call timings and real GUI
+outcome checks. The default server profile includes these improvements.
 
 The QuickControl server profile also uses **double-tap Escape** for deliberate
 takeover, ignores accidental physical input while AI control is active, removes
@@ -78,6 +80,39 @@ back. Upstream ownership checks still apply to desktop input.
 
 Use `@file.json` arguments in PowerShell to avoid native-command quoting issues.
 Run without a tool name to list the server's tool schemas.
+
+## Faster input and stable workflows
+
+The default `server.py` profile adds:
+
+- Native Unicode input in bounded chunks, including emoji, literal braces and
+  multiline text. It leaves the clipboard untouched and keeps the original
+  pointer-focus wait. Check the visible result before continuing.
+- `FillForm(loc=[x,y], fields=[...], submit=False)` for a previously observed,
+  empty form with a known linear Tab order. It focuses once and enters values
+  with Tab between them. Submission is off by default. Enable it only when the
+  next control after the final field is the observed save button.
+- `Sequence(actions=[...])` for up to 16 Click, Type or Shortcut calls on stable
+  targets. The entire plan is validated first, with 4,000 text characters total
+  and a 30-second budget for starting further actions. It stops on error and
+  never retries completed input. An in-flight action is not forcibly timed out.
+
+Both tools use the existing control gate. Native input checks ownership and
+foreground changes between chunks. Worker context follows the existing UIA
+thread, and cancellation drains that worker before control is released.
+Navigation and layout changes still require a fresh observation.
+
+| Verified task | Baseline median | QuickControl median | Speedup |
+| --- | ---: | ---: | ---: |
+| Eight-field form | 17.99 s | 1.27 s | 14.1× |
+| Notepad Unicode JSON edit/save | 13.79 s | 2.83 s | 4.9× |
+| Search and update ticket | 6.97 s | 4.13 s | 1.7× |
+| Replace plain-text note | 2.35 s | 2.08 s | 1.1× |
+
+The form comparison includes a change from repeated pointer edits to observed
+keyboard traversal. These are small local tests, not universal speed claims.
+See the [R&D report](measurements/rd-report.md) for all samples, failures and
+reproduction steps. `baseline_server.py` preserves the earlier typing behavior.
 
 ## Deliberate control and one monitor
 
@@ -199,7 +234,8 @@ python -m unittest discover -v
 powershell -NoProfile -File .\benchmark.ps1
 ```
 
-The tests cover batch cancellation, user control, SDK field compatibility,
+The 71 offline tests cover native Unicode input, partial sends, cancellation,
+form validation, sequence bounds, worker context, batch cancellation, user control, SDK field compatibility,
 coordinate conversion, Escape timing, physical versus injected input, capture
 suspension, fault release, and monitor selection. They do not touch the desktop.
 A Windows-only integration smoke check uses real upstream hook structures without

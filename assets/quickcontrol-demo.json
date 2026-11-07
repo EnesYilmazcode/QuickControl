@@ -1,0 +1,40 @@
+{
+  "baseline": "artifacts\\live\\20261107-011326-baseline-form-pointer\\0.mp4",
+  "optimized": "artifacts\\live\\20261107-013037-rapid-form-keyboard\\0.mp4",
+  "source_durations_seconds": [
+    19.133333,
+    2.6
+  ],
+  "output_duration_seconds": 19.133333,
+  "source_crop_xywh": [
+    20,
+    40,
+    1200,
+    820
+  ],
+  "source_dimensions_required": [
+    1240,
+    900
+  ],
+  "playback": "Original speed; shorter final frame held; no source frames cut",
+  "alignment": "Original recording starts; no automatic click alignment",
+  "caption_warm_gui_seconds": [
+    17.99,
+    1.27
+  ],
+  "scope": "Synthetic contact intake; warm GUI input excludes startup and agent reasoning",
+  "audit_frames": {
+    "first": {
+      "path": "assets\\quickcontrol-demo-first.png",
+      "seconds": 0.05
+    },
+    "middle": {
+      "path": "assets\\quickcontrol-demo-middle.png",
+      "seconds": 9.5666665
+    },
+    "final": {
+      "path": "assets\\quickcontrol-demo-final.png",
+      "seconds": 19.033333
+    }
+  }
+}

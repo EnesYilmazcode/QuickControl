@@ -1,0 +1,1387 @@
+{
+  "date": "2026-11-07",
+  "scope": "Warm GUI input through independently verified outcome; startup, navigation, observation and agent reasoning excluded. Search includes intermediate screenshots.",
+  "summary": [
+    {
+      "task": "form",
+      "samples_ms": {
+        "baseline": [
+          17138.508,
+          17988.619,
+          18044.049
+        ],
+        "rapid": [
+          1255.74,
+          1274.876,
+          1296.827
+        ]
+      },
+      "baseline_median_ms": 17988.619,
+      "rapid_median_ms": 1274.876,
+      "speedup": 14.11,
+      "selected_passes": 6
+    },
+    {
+      "task": "edit",
+      "samples_ms": {
+        "baseline": [
+          2125.957,
+          2833.794,
+          2349.768
+        ],
+        "rapid": [
+          2081.943,
+          1748.918,
+          2080.034
+        ]
+      },
+      "baseline_median_ms": 2349.768,
+      "rapid_median_ms": 2080.034,
+      "speedup": 1.13,
+      "selected_passes": 6
+    },
+    {
+      "task": "search",
+      "samples_ms": {
+        "baseline": [
+          6000.574,
+          6968.204,
+          6976.484
+        ],
+        "rapid": [
+          3982.63,
+          4301.838,
+          4134.36
+        ]
+      },
+      "baseline_median_ms": 6968.204,
+      "rapid_median_ms": 4134.36,
+      "speedup": 1.685,
+      "selected_passes": 6
+    },
+    {
+      "task": "native-json-edit",
+      "samples_ms": {
+        "baseline": [
+          12916.617,
+          13887.203,
+          13790.593
+        ],
+        "rapid": [
+          2443.808,
+          2832.76,
+          2860.009
+        ]
+      },
+      "baseline_median_ms": 13790.593,
+      "rapid_median_ms": 2832.76,
+      "speedup": 4.868,
+      "selected_passes": 6
+    }
+  ],
+  "attempts": [
+    {
+      "profile": "baseline",
+      "task": "form",
+      "run": "baseline-form-574039dad2",
+      "verified_ms": 17138.508,
+      "passed": true,
+      "calls": [
+        {
+          "name": "MultiEdit",
+          "ms": 16479.081
+        },
+        {
+          "name": "Click",
+          "ms": 570.46
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "baseline-form-574039dad2",
+        "submitted": true,
+        "received_ns": 49175790727500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-010431-baseline-form/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-a47531e5a9",
+      "verified_ms": 2260.236,
+      "passed": false,
+      "calls": [
+        {
+          "name": "MultiEdit",
+          "ms": 1659.567
+        },
+        {
+          "name": "Click",
+          "ms": 571.106
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": false,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "Please send the “quick start” guide — thanks!",
+          "notes": ""
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-a47531e5a9",
+        "submitted": true,
+        "received_ns": 49215813937700
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-010732-rapid-form/results.json",
+      "cohort": "rejected-focus-experiment"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-1939e0c3bb",
+      "strategy": "keyboard",
+      "verified_ms": 994.62,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 961.312
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-1939e0c3bb",
+        "submitted": true,
+        "received_ns": 49298916765200
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-010900-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-b510dfc728",
+      "strategy": "keyboard",
+      "verified_ms": 1267.569,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1234.734
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-b510dfc728",
+        "submitted": true,
+        "received_ns": 49392796522700
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011040-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "baseline",
+      "task": "edit",
+      "run": "baseline-edit-3829393718",
+      "strategy": "pointer",
+      "verified_ms": 2125.957,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1524.847
+        },
+        {
+          "name": "Click",
+          "ms": 569.498
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "baseline-edit-3829393718",
+        "submitted": true,
+        "received_ns": 49432126536900
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011059-baseline-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "edit",
+      "run": "rapid-edit-6108ff4dc1",
+      "strategy": "pointer",
+      "verified_ms": 2081.943,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1136.316
+        },
+        {
+          "name": "Click",
+          "ms": 912.867
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "rapid-edit-6108ff4dc1",
+        "submitted": true,
+        "received_ns": 49496495441300
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011224-rapid-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "edit",
+      "run": "rapid-edit-e4e4c4885e",
+      "strategy": "pointer",
+      "verified_ms": 1748.918,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1121.257
+        },
+        {
+          "name": "Click",
+          "ms": 573.826
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "rapid-edit-e4e4c4885e",
+        "submitted": true,
+        "received_ns": 49510489250900
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011238-rapid-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "edit",
+      "run": "rapid-edit-b4a60ca792",
+      "strategy": "pointer",
+      "verified_ms": 2080.034,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1125.105
+        },
+        {
+          "name": "Click",
+          "ms": 915.943
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "rapid-edit-b4a60ca792",
+        "submitted": true,
+        "received_ns": 49524449569000
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011252-rapid-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "form",
+      "run": "baseline-form-4370fe3794",
+      "strategy": "pointer",
+      "verified_ms": 17988.619,
+      "passed": true,
+      "calls": [
+        {
+          "name": "MultiEdit",
+          "ms": 17370.872
+        },
+        {
+          "name": "Click",
+          "ms": 564.231
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "baseline-form-4370fe3794",
+        "submitted": true,
+        "received_ns": 49574808650400
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011326-baseline-form-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "form",
+      "run": "baseline-form-7f9980fc32",
+      "strategy": "pointer",
+      "verified_ms": 18044.049,
+      "passed": true,
+      "calls": [
+        {
+          "name": "MultiEdit",
+          "ms": 17433.243
+        },
+        {
+          "name": "Click",
+          "ms": 564.068
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "baseline-form-7f9980fc32",
+        "submitted": true,
+        "received_ns": 49604073795900
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011355-baseline-form-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-371c60d919",
+      "strategy": "keyboard",
+      "verified_ms": 1416.655,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1385.147
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-371c60d919",
+        "submitted": true,
+        "received_ns": 49651260786500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011459-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-f72122ba5a",
+      "strategy": "keyboard",
+      "verified_ms": 1313.911,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1282.509
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-f72122ba5a",
+        "submitted": true,
+        "received_ns": 49663845440700
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011511-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-c2760e94ee",
+      "strategy": "keyboard",
+      "verified_ms": 1466.802,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1436.015
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-c2760e94ee",
+        "submitted": true,
+        "received_ns": 49676913514900
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011524-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "baseline",
+      "task": "edit",
+      "run": "baseline-edit-db8ad735c8",
+      "strategy": "pointer",
+      "verified_ms": 2833.794,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1654.48
+        },
+        {
+          "name": "Click",
+          "ms": 1141.325
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "baseline-edit-db8ad735c8",
+        "submitted": true,
+        "received_ns": 49735677301600
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011622-baseline-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "edit",
+      "run": "baseline-edit-70eee4ee22",
+      "strategy": "pointer",
+      "verified_ms": 2349.768,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1638.694
+        },
+        {
+          "name": "Click",
+          "ms": 676.982
+        }
+      ],
+      "result": {
+        "task": "edit",
+        "passed": true,
+        "actual": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "expected": {
+          "text": "Final: The shipment arrives Friday, 13 November. Contact ops+desk@example.com — approved."
+        },
+        "run": "baseline-edit-70eee4ee22",
+        "submitted": true,
+        "received_ns": 49749542837300
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011637-baseline-edit-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "search",
+      "run": "baseline-search-63a59f4c69",
+      "strategy": "pointer",
+      "verified_ms": 6000.574,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 2076.649
+        },
+        {
+          "name": "Shortcut",
+          "ms": 623.709
+        },
+        {
+          "name": "Type",
+          "ms": 1657.61
+        },
+        {
+          "name": "Shortcut",
+          "ms": 526.368
+        },
+        {
+          "name": "Shortcut",
+          "ms": 738.464
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "baseline-search-63a59f4c69",
+        "submitted": true,
+        "received_ns": 49827906922200
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011738-baseline-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-8c96295075",
+      "strategy": "keyboard",
+      "verified_ms": 1394.18,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1361.683
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-8c96295075",
+        "submitted": true,
+        "received_ns": 49883942244700
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011851-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-adb1b7fe72",
+      "strategy": "keyboard",
+      "verified_ms": 1248.885,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1214.727
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-adb1b7fe72",
+        "submitted": true,
+        "received_ns": 49896426076000
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011904-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-51eced6db9",
+      "strategy": "keyboard",
+      "verified_ms": 1276.787,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1245.356
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-51eced6db9",
+        "submitted": true,
+        "received_ns": 49909534858500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-011917-rapid-form-keyboard/results.json",
+      "cohort": "exploratory"
+    },
+    {
+      "profile": "baseline",
+      "task": "search",
+      "run": "baseline-search-8f8beda539",
+      "strategy": "pointer",
+      "verified_ms": 6968.204,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 3062.909
+        },
+        {
+          "name": "Shortcut",
+          "ms": 632.744
+        },
+        {
+          "name": "Type",
+          "ms": 1618.476
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.048
+        },
+        {
+          "name": "Shortcut",
+          "ms": 769.182
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "baseline-search-8f8beda539",
+        "submitted": true,
+        "received_ns": 49971208283500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012014-baseline-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "search",
+      "run": "baseline-search-1201513c2b",
+      "strategy": "pointer",
+      "verified_ms": 6976.484,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 3191.03
+        },
+        {
+          "name": "Shortcut",
+          "ms": 638.908
+        },
+        {
+          "name": "Type",
+          "ms": 1516.743
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.537
+        },
+        {
+          "name": "Shortcut",
+          "ms": 744.986
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "baseline-search-1201513c2b",
+        "submitted": true,
+        "received_ns": 49990241311900
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012033-baseline-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "search",
+      "run": "rapid-search-df2b56f390",
+      "strategy": "pointer",
+      "verified_ms": 7205.266,
+      "passed": false,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 975.475
+        },
+        {
+          "name": "Shortcut",
+          "ms": 672.377
+        },
+        {
+          "name": "Type",
+          "ms": 1140.838
+        },
+        {
+          "name": "Shortcut",
+          "ms": 529.255
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.644
+        }
+      ],
+      "result": {
+        "run": "rapid-search-df2b56f390",
+        "submitted": false
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012616-rapid-search-pointer/results.json",
+      "cohort": "targeting-harness-failure"
+    },
+    {
+      "profile": "rapid",
+      "task": "search",
+      "run": "rapid-search-20e75ccdee",
+      "strategy": "pointer",
+      "verified_ms": 3982.63,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 738.056
+        },
+        {
+          "name": "Shortcut",
+          "ms": 624.366
+        },
+        {
+          "name": "Type",
+          "ms": 1202.94
+        },
+        {
+          "name": "Shortcut",
+          "ms": 526.662
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.875
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "rapid-search-20e75ccdee",
+        "submitted": true,
+        "received_ns": 50479645232500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012834-rapid-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "search",
+      "run": "rapid-search-73cfa88c61",
+      "strategy": "pointer",
+      "verified_ms": 4301.838,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 1057.462
+        },
+        {
+          "name": "Shortcut",
+          "ms": 655.97
+        },
+        {
+          "name": "Type",
+          "ms": 1180.416
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.393
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.748
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "rapid-search-73cfa88c61",
+        "submitted": true,
+        "received_ns": 50515075215500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012920-rapid-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "search",
+      "run": "rapid-search-f0ecdeec58",
+      "strategy": "pointer",
+      "verified_ms": 4134.36,
+      "passed": true,
+      "calls": [
+        {
+          "name": "Type",
+          "ms": 862.259
+        },
+        {
+          "name": "Shortcut",
+          "ms": 637.637
+        },
+        {
+          "name": "Type",
+          "ms": 1214.312
+        },
+        {
+          "name": "Shortcut",
+          "ms": 528.57
+        },
+        {
+          "name": "Shortcut",
+          "ms": 527.927
+        }
+      ],
+      "result": {
+        "task": "search",
+        "passed": true,
+        "actual": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "expected": {
+          "query": "billing",
+          "ticket": "QC-204",
+          "note": "Reviewed invoice #204 — please reissue."
+        },
+        "run": "rapid-search-f0ecdeec58",
+        "submitted": true,
+        "received_ns": 50530870752600
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-012936-rapid-search-pointer/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-7181043700",
+      "strategy": "keyboard",
+      "verified_ms": 1255.74,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1221.054
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-7181043700",
+        "submitted": true,
+        "received_ns": 50576488548500
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-013024-rapid-form-keyboard/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-dc6d4294d0",
+      "strategy": "keyboard",
+      "verified_ms": 1274.876,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1228.253
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-dc6d4294d0",
+        "submitted": true,
+        "received_ns": 50589434237300
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-013037-rapid-form-keyboard/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "form",
+      "run": "rapid-form-1e784fd8f1",
+      "strategy": "keyboard",
+      "verified_ms": 1296.827,
+      "passed": true,
+      "calls": [
+        {
+          "name": "FillForm",
+          "ms": 1264.397
+        }
+      ],
+      "result": {
+        "task": "form",
+        "passed": true,
+        "actual": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "expected": {
+          "name": "Zoë García",
+          "email": "zoe.garcia+demo@example.com",
+          "company": "Northwind Research & Design",
+          "role": "Product engineer",
+          "phone": "+1 (202) 555-0147",
+          "city": "Montréal",
+          "reference": "QC-2026/11 #42",
+          "notes": "Please send the “quick start” guide — thanks!"
+        },
+        "run": "rapid-form-1e784fd8f1",
+        "submitted": true,
+        "received_ns": 50602432873600
+      },
+      "scope": "Warm GUI execution through exact saved outcome; excludes setup, navigation, model reasoning",
+      "source": "artifacts/live/20261107-013050-rapid-form-keyboard/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 12916.617,
+      "type_ms": 12347.552,
+      "save_ms": 550.829,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-012201-baseline/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 2443.808,
+      "type_ms": 1355.663,
+      "save_ms": 550.382,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-012506-rapid/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 13887.203,
+      "type_ms": 13333.036,
+      "save_ms": 552.349,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-013130-baseline/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "baseline",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 13790.593,
+      "type_ms": 13236.66,
+      "save_ms": 552.333,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-013155-baseline/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 2832.76,
+      "type_ms": 1341.552,
+      "save_ms": 552.752,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-013228-rapid/results.json",
+      "cohort": "selected"
+    },
+    {
+      "profile": "rapid",
+      "task": "native-json-edit",
+      "passed": true,
+      "verified_ms": 2860.009,
+      "type_ms": 1386.224,
+      "save_ms": 555.14,
+      "actual": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "expected": "{\n  \"project\": \"QuickControl\",\n  \"greeting\": \"こんにちは 👋\",\n  \"city\": \"Montréal\",\n  \"enabled\": true,\n  \"retry_limit\": 3\n}",
+      "scope": "Real Notepad GUI edit through verified saved file; startup, navigation and reasoning excluded",
+      "source": "artifacts/native/20261107-013242-rapid/results.json",
+      "cohort": "selected"
+    }
+  ],
+  "setup_attempts_without_task_results": [
+    {
+      "source": "artifacts/live/20261107-010900-rapid-form-keyboard",
+      "issue": "Second same-session round hit CONTROL_PREEMPTED during setup screenshot. Fixed by fresh session per run."
+    },
+    {
+      "source": "artifacts/native/20261107-012410-rapid",
+      "issue": "Pre-input go.json read raced writer. Fixed preflight retry; no input injected."
+    }
+  ]
+}
