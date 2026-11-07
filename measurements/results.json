@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-07",
+  "environment": {
+    "os": "Windows",
+    "windows_mcp": "0.8.8",
+    "python": "3.14",
+    "displays": [[1920, 1080], [1920, 1080]],
+    "typing_app": "Chrome, local HTML fixture"
+  },
+  "fallback_wall_time_ms": {
+    "separate_launches": [8437, 8288, 8332],
+    "one_batch_three_screenshots_plus_control_status": 10142,
+    "exit_codes": [0, 0, 0, 0],
+    "completed_rounds": 1
+  },
+  "direct_observation_ms": {
+    "full_accessibility_snapshot": [22791],
+    "primary_display_screenshot": [632, 284, 313],
+    "chrome_region_screenshot": [293, 718, 734]
+  },
+  "image_bytes": {
+    "primary_display": 749994,
+    "chrome_region": 56079
+  },
+  "three_field_typing_ms": {
+    "upstream": [7005.59, 6713.78],
+    "experimental_short_text_paste": [5633.87, 5534.27],
+    "paste_visual_results": ["PASS", "PASS"]
+  }
+}
