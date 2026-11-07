@@ -3,14 +3,38 @@
 <p align="center"><b>Faster Windows control for AI agents.</b><br>
 Enter text and fill stable forms with fewer waits and tool calls.</p>
 
-In local GUI tests, an eight-field form fell from **17.99 to 1.27 seconds**.
-A real Notepad edit and save fell from **13.79 to 2.83 seconds**. Each number
-is the median of three exact-outcome passes per profile. Startup, navigation
-and agent reasoning are excluded; gains vary by task.
+On two real websites, the same agent actions finished about **3x faster**,
+and every run was checked against what the site actually received:
 
-[![Original-speed desktop comparison](assets/quickcontrol-demo.gif)](assets/quickcontrol-demo.mp4)
+| Real task | Windows MCP | QuickControl | Speedup |
+| --- | ---: | ---: | ---: |
+| GitHub advanced search, 5 filters | 7.55 s | 2.50 s | 3.0x |
+| calculator.net mortgage estimate, 6 fields | 5.27 s | 1.90 s | 2.8x |
 
-[Watch the video](assets/quickcontrol-demo.mp4) | [Results and failed experiments](measurements/rd-report.md)
+Medians of three passing runs per side, recorded at original speed. Startup,
+page load and agent reasoning are excluded.
+
+[![GitHub advanced search, side by side](assets/github-search-demo.gif)](assets/github-search-demo.mp4)
+
+[![Mortgage calculator, side by side](assets/mortgage-demo.gif)](assets/mortgage-demo.mp4)
+
+[GitHub video](assets/github-search-demo.mp4) | [Mortgage video](assets/mortgage-demo.mp4) | [Real-site report](measurements/real-web.md) | [Earlier R&D and failed experiments](measurements/rd-report.md)
+
+## How it works
+
+![QuickControl architecture](assets/architecture.svg)
+
+The agent's tool call is the same on both sides. QuickControl swaps the input
+engine underneath: text goes out as native Unicode keystrokes in bounded
+chunks instead of one paced keypress at a time, each Tab waits until focus has
+really moved before the next field is typed, and a batch of calls shares one
+MCP connection. Control ownership and cancellation checks run between chunks.
+More detail in [docs/architecture.md](docs/architecture.md).
+
+On a synthetic eight-field fixture the gap is larger, **17.99 to 1.27
+seconds**, and a real Notepad edit and save fell from **13.79 to 2.83
+seconds**. The [fixture demo](assets/quickcontrol-demo.mp4) is kept for
+reference.
 
 Built on [CursorTouch's Windows MCP](https://github.com/CursorTouch/Windows-MCP).
 Windows MCP provides desktop tools, screenshots, accessibility and control
