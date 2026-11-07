@@ -1,0 +1,4 @@
+<!doctype html><meta charset="utf-8"><title>Windows MCP speed lab</title>
+<style>body{font:20px system-ui;margin:30px;background:#f4f6fa}label{display:block;margin:20px}input{font:20px system-ui;width:480px;margin-left:20px}button{font:20px system-ui;margin:20px}output{font-weight:bold}</style>
+<label>Field 1 <input id="a"></label><label>Field 2 <input id="b"></label><label>Field 3 <input id="c"></label>
+<button onclick="document.querySelector('output').textContent=JSON.stringify([a.value,b.value,c.value])===JSON.stringify(['alpha-123','bravo+456','charlie {789}'])?'PASS: all three values match':'FAIL: values differ'">Verify locally</button><output>Ready</output>
