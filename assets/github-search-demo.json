@@ -1,0 +1,40 @@
+{
+  "baseline": "artifacts\\real-web\\20261107-113226-baseline-1fe971\\0.mp4",
+  "optimized": "artifacts\\real-web\\20261107-114038-rapid-17fc95\\0.mp4",
+  "source_durations_seconds": [
+    8.833333,
+    4.166667
+  ],
+  "output_duration_seconds": 8.833333,
+  "source_crop_xywh": [
+    20,
+    40,
+    1200,
+    820
+  ],
+  "source_dimensions_required": [
+    1240,
+    900
+  ],
+  "playback": "Original speed; shorter final frame held; no source frames cut",
+  "alignment": "Original recording starts; no automatic click alignment",
+  "caption_warm_gui_seconds": [
+    7.55,
+    2.5
+  ],
+  "scope": "Real GitHub advanced search, 5 filters; warm GUI input excludes startup and agent reasoning",
+  "audit_frames": {
+    "first": {
+      "path": "assets\\github-search-demo-first.png",
+      "seconds": 0.05
+    },
+    "middle": {
+      "path": "assets\\github-search-demo-middle.png",
+      "seconds": 4.4166665
+    },
+    "final": {
+      "path": "assets\\github-search-demo-final.png",
+      "seconds": 8.733333
+    }
+  }
+}
