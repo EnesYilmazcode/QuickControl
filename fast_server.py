@@ -1,4 +1,8 @@
 """Experimental short-text paste profile; preserves upstream arbitration and tools."""
+from runtime_profile import install
+
+install()
+
 from windows_mcp.desktop.service import Desktop
 from windows_mcp.__main__ import main
 

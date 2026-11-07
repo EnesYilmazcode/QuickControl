@@ -1,0 +1,5 @@
+# Run from this repository, or replace server.py with its absolute path.
+[mcp_servers.windows-mcp]
+command = 'uv'
+args = ['run', '--python', '3.14', '--with', 'windows-mcp==0.8.8', 'python', 'server.py', 'serve']
+startup_timeout_sec = 120
