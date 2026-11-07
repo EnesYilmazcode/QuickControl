@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1160" viewBox="0 0 1400 1160" role="img" aria-labelledby="title description">
+  <title id="title">QuickControl system architecture</title>
+  <desc id="description">An agent or reusable MCP client sends calls through the upstream Windows MCP ownership gate. FillForm and Sequence reuse upstream tools. UIA work preserves control context on the original worker; rapid Type sends bounded Unicode chunks through the input ledger to Windows. Screenshots and exact outcome checks close the observation loop. Cancellation drains native work before releasing the gate.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1"><stop stop-color="#101827"/><stop offset="1" stop-color="#090f1b"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#8094af"/></marker>
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#6ee7b7"/></marker>
+    <style>
+      text{font-family:Segoe UI,Arial,sans-serif;fill:#edf4ff}
+      .eyebrow{font-size:14px;font-weight:700;letter-spacing:2px;fill:#6ee7b7}
+      .heading{font-size:38px;font-weight:700;letter-spacing:-1px}
+      .subtitle{font-size:18px;fill:#9cacc4}
+      .card{fill:#172235;stroke:#30425c;stroke-width:1.5}
+      .upstream{fill:#162235;stroke:#58749b;stroke-width:1.5}
+      .added{fill:#132c2d;stroke:#3d8c7c;stroke-width:1.5}
+      .label{font-size:21px;font-weight:650}
+      .body{font-size:16px;fill:#b8c8dd}
+      .small{font-size:14px;fill:#9cacc4}
+      .tag{font-size:12px;font-weight:700;letter-spacing:1.1px;fill:#6ee7b7}
+      .line{fill:none;stroke:#8094af;stroke-width:2;marker-end:url(#arrow)}
+      .feedback{fill:none;stroke:#6ee7b7;stroke-width:2;stroke-dasharray:7 6;marker-end:url(#greenArrow)}
+      .file{font-family:Consolas,monospace;font-size:13px;fill:#8fa6c6}
+    </style>
+  </defs>
+  <rect width="1400" height="1160" rx="24" fill="url(#background)"/>
+  <text x="64" y="51" class="eyebrow">QUICKCONTROL / SYSTEM DESIGN</text>
+  <text x="64" y="103" class="heading">Fewer round trips. Bounded native input.</text>
+  <text x="64" y="137" class="subtitle">A startup adapter around CursorTouch Windows MCP — with its ownership gate retained.</text>
+
+  <rect x="64" y="177" width="607" height="100" rx="14" class="card"/>
+  <text x="86" y="210" class="label">AI agent / directly exposed MCP tools</text>
+  <text x="86" y="237" class="body">Observe the current UI, then choose the next action.</text>
+  <text x="86" y="259" class="small">Existing direct-tool connections already stay open.</text>
+  <rect x="699" y="177" width="607" height="100" rx="14" class="added"/>
+  <text x="721" y="210" class="label">Fallback client: quickcontrol.py</text>
+  <text x="721" y="237" class="body">One initialized MCP session for a bounded batch.</text>
+  <text x="721" y="259" class="small">Sequential calls • per-call artifacts • stops on tool error</text>
+  <path d="M367 277V299H685V320" class="line"/>
+  <path d="M1002 277V299H715V320" class="line"/>
+
+  <rect x="245" y="324" width="880" height="104" rx="14" class="upstream"/>
+  <text x="270" y="356" class="tag" fill="#adc7eb">UPSTREAM CONTROL BOUNDARY</text>
+  <text x="270" y="386" class="label">ControlToolGate → owned, serialized tool call</text>
+  <text x="270" y="411" class="body">Lease token • visible indicator • user takeover • watchdog / fault release</text>
+  <path d="M685 428V451H263V474" class="line"/>
+  <path d="M685 428V474" class="line"/>
+  <path d="M685 451H1107V474" class="line"/>
+
+  <rect x="64" y="478" width="398" height="126" rx="14" class="added"/>
+  <text x="86" y="511" class="label">FillForm</text>
+  <text x="86" y="538" class="body">One focus → values + known Tab order</text>
+  <text x="86" y="562" class="small">Observed empty forms; no submit by default</text>
+  <text x="86" y="585" class="file">sequence_tool.py</text>
+  <rect x="486" y="478" width="398" height="126" rx="14" class="added"/>
+  <text x="508" y="511" class="label">Sequence</text>
+  <text x="508" y="538" class="body">Up to 16 stable Click / Type / Shortcut steps</text>
+  <text x="508" y="562" class="small">Full-plan validation; no automatic retries</text>
+  <text x="508" y="585" class="file">sequence_tool.py</text>
+  <rect x="908" y="478" width="398" height="126" rx="14" class="upstream"/>
+  <text x="930" y="511" class="label">Original MCP tool wrappers</text>
+  <text x="930" y="538" class="body">Type / Click and the remaining tool catalog</text>
+  <text x="930" y="562" class="small">FillForm and Sequence reuse these wrappers.</text>
+  <text x="930" y="585" class="file">windows_mcp.tools</text>
+  <path d="M263 604V626H685V648" class="line"/>
+  <path d="M685 604V648" class="line"/>
+  <path d="M1107 604V626H685" fill="none" stroke="#8094af" stroke-width="2"/>
+  <path d="M1200 604V648" class="line"/>
+
+  <rect x="64" y="652" width="820" height="112" rx="14" class="added"/>
+  <text x="86" y="685" class="label">UIA context bridge → original COM-affine worker</text>
+  <text x="86" y="712" class="body">Copy the ownership token; keep one worker and preserve thread affinity.</text>
+  <text x="86" y="737" class="small">Cancellation signals native checkpoints, then waits for worker exit before gate release.</text>
+  <rect x="908" y="652" width="398" height="112" rx="14" class="card"/>
+  <text x="930" y="685" class="label">Other tool execution</text>
+  <text x="930" y="712" class="body">Retains upstream paths.</text>
+  <text x="930" y="737" class="small">Shortcut uses its original generic worker.</text>
+  <path d="M474 764V803" class="line"/>
+
+  <rect x="64" y="807" width="820" height="136" rx="14" class="added"/>
+  <text x="86" y="840" class="label">Rapid Type → input ledger → Win32 SendInput</text>
+  <text x="86" y="869" class="body">UTF-16 Unicode chunks • balanced key events • per-chunk ownership checks</text>
+  <text x="86" y="894" class="body">Clipboard untouched • original focus settling wait • partial sends stop</text>
+  <text x="86" y="920" class="file">rapid_input.py + uia_context.py</text>
+  <rect x="908" y="807" width="398" height="136" rx="14" class="upstream"/>
+  <text x="930" y="840" class="label">Observe and verify</text>
+  <text x="930" y="869" class="body">Screenshot: primary display by default</text>
+  <text x="930" y="894" class="body">Snapshot: when UI semantics are needed</text>
+  <text x="930" y="920" class="small">Exact saved outcomes in the demo harness</text>
+  <path d="M474 943V981" class="line"/>
+  <path d="M887 1030H1107V947" class="feedback"/>
+  <path d="M1306 875H1340V227H1310" class="feedback"/>
+  <text x="1355" y="655" class="small" transform="rotate(-90 1355 655)">Inspect state before the next decision</text>
+
+  <rect x="64" y="985" width="820" height="84" rx="14" class="card"/>
+  <text x="86" y="1019" class="label">Windows application</text>
+  <text x="86" y="1047" class="body">Queued input is not a verified outcome. Check the actual UI or saved result.</text>
+  <text x="64" y="1113" class="small">Green: QuickControl adapters / workflow tools</text>
+  <text x="530" y="1113" class="small">Blue: upstream Windows MCP</text>
+  <text x="908" y="1113" class="small">Entry point: rapid_server.py / server.py</text>
+</svg>
