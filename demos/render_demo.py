@@ -22,7 +22,8 @@ def probe(path, ffprobe):
 
 
 def render(baseline, optimized, output, *, ffmpeg=None, baseline_seconds=None,
-           optimized_seconds=None, gif=False, poster=False):
+           optimized_seconds=None, gif=False, poster=False,
+           caption='Synthetic contact intake'):
     ffmpeg = ffmpeg or shutil.which('ffmpeg')
     if not ffmpeg:
         raise FileNotFoundError('Put ffmpeg on PATH or pass --ffmpeg')
@@ -55,7 +56,7 @@ def render(baseline, optimized, output, *, ffmpeg=None, baseline_seconds=None,
             f'tpad=stop_mode=clone:stop_duration={duration},trim=duration={duration}[v{index}]')
     filters.append('[v0][v1]hstack=inputs=2,pad=2400:980:0:0:color=0x15223b,'
                    + text('Original speed | Shorter recording freezes on its final frame', 27, 24, 903)
-                   + ',' + text('Synthetic contact intake | Warm GUI input excludes startup and agent reasoning', 26, 24, 943)
+                   + ',' + text(caption + ' | Warm GUI input excludes startup and agent reasoning', 26, 24, 943)
                    + '[out]')
     run([ffmpeg, '-hide_banner', '-y', '-i', str(baseline), '-i', str(optimized),
          '-filter_complex', ';'.join(filters), '-map', '[out]', '-an', '-c:v', 'libx264',
@@ -86,7 +87,7 @@ def render(baseline, optimized, output, *, ffmpeg=None, baseline_seconds=None,
                 'playback': 'Original speed; shorter final frame held; no source frames cut',
                 'alignment': 'Original recording starts; no automatic click alignment',
                 'caption_warm_gui_seconds': numbers,
-                'scope': 'Synthetic contact intake; warm GUI input excludes startup and agent reasoning',
+                'scope': caption + '; warm GUI input excludes startup and agent reasoning',
                 'audit_frames': frames}
     output.with_suffix('.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     return metadata
@@ -102,8 +103,10 @@ if __name__ == '__main__':
     parser.add_argument('--optimized-seconds', type=float)
     parser.add_argument('--gif', action='store_true')
     parser.add_argument('--poster', action='store_true')
+    parser.add_argument('--caption', default='Synthetic contact intake')
     args = parser.parse_args()
     print(json.dumps(render(args.baseline, args.optimized, args.output, ffmpeg=args.ffmpeg,
                             baseline_seconds=args.baseline_seconds,
                             optimized_seconds=args.optimized_seconds,
-                            gif=args.gif, poster=args.poster), indent=2))
+                            gif=args.gif, poster=args.poster,
+                            caption=args.caption), indent=2))
