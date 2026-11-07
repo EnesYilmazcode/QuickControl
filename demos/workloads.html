@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>QuickControl · Real GUI speed lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:18px system-ui;background:#edf2f8;color:#192a42}
+main{margin:22px auto;padding:22px 30px;background:white;max-width:1020px;border-radius:14px}
+h1{margin:0 0 6px;font-size:29px}p{margin:6px 0 17px;color:#516079}small{font-size:13px}
+label{display:block;font-weight:600;margin:9px 0}input,textarea,button{font:18px system-ui}
+input,textarea{display:block;width:100%;padding:8px;border:1px solid #94a6bd;border-radius:5px}
+input:focus,textarea:focus,button:focus{outline:3px solid #2678df;outline-offset:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}button{padding:10px 18px;border:0;border-radius:6px;background:#1766c4;color:white;margin-top:12px;cursor:pointer}
+textarea{height:180px}output{display:block;padding:12px;margin-top:14px;background:#edf2f8;font-weight:700;min-height:50px}
+.pass{background:#d2f4df;color:#14542a}.fail{background:#ffe0e0;color:#7a1717}#details{margin-top:15px}.ticket{display:block;background:#e2edff;color:#192a42;text-align:left;width:100%}
+</style>
+<main><h1>QuickControl speed lab</h1><p id="description"></p><section id="task"></section><output id="status">Ready · complete the task using normal desktop input</output><small id="run"></small></main>
+<script>
+const params=new URLSearchParams(location.search), task=params.get('task')||'form', run=params.get('run')||crypto.randomUUID();
+document.querySelector('#run').textContent=`Synthetic local data · task ${task} · run ${run}`;
+const host=document.querySelector('#task'), status=document.querySelector('#status');
+let submitting=false;
+async function submit(actual){
+ if(submitting)return;submitting=true;
+ const response=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,run,actual})});
+ const result=await response.json();status.textContent=result.passed?'PASS · all submitted values match exactly':'FAIL · submitted values differ or run was reused';status.className=result.passed?'pass':'fail';
+ window.quickControlResult=result;
+}
+async function init(){
+ const data=await(await fetch('/api/cases')).json();
+ if(task==='form'){
+  document.querySelector('#description').textContent='Contact intake · fill eight fields, then save the contact.';
+  const form=document.createElement('form'), grid=document.createElement('div');grid.className='fields';
+  for(const [key] of Object.entries(data.expected.form)){
+   const label=document.createElement('label');label.textContent=key[0].toUpperCase()+key.slice(1);
+   const input=document.createElement('input');input.name=key;input.autocomplete='off';input.spellcheck=false;label.append(input);grid.append(label);
+  }
+  const button=document.createElement('button');button.textContent='Save contact';form.append(grid,button);host.append(form);
+  form.addEventListener('submit',e=>{e.preventDefault();submit(Object.fromEntries(new FormData(form)));});
+ }else if(task==='edit'){
+  document.querySelector('#description').textContent='Draft correction · replace the existing text, then save the final version.';
+  const form=document.createElement('form'), label=document.createElement('label'), area=document.createElement('textarea'), button=document.createElement('button');
+  label.textContent='Dispatch note';area.value=data.edit_old;area.spellcheck=false;label.append(area);button.textContent='Save final version';form.append(label,button);host.append(form);
+  form.addEventListener('submit',e=>{e.preventDefault();submit({text:area.value});});
+ }else if(task==='search'){
+  document.querySelector('#description').textContent='Support triage · search billing, open the matching ticket, add a note, then save.';
+  host.innerHTML='<form id="filter"><label>Search tickets<input id="query" autocomplete="off"></label></form><div id="results"></div><div id="details"></div>';
+  const tickets=[['QC-101','Account access'],['QC-204','Billing invoice correction'],['QC-309','Shipping question']];
+  document.querySelector('#filter').onsubmit=e=>{
+   e.preventDefault();const query=document.querySelector('#query').value.toLowerCase();document.querySelector('#results').replaceChildren();document.querySelector('#details').replaceChildren();
+   for(const [id,title] of tickets.filter(([id,title])=>(id+' '+title).toLowerCase().includes(query))){
+    const button=document.createElement('button');button.className='ticket';button.textContent=id+' · '+title;
+    button.onclick=()=>{const form=document.createElement('form'), label=document.createElement('label'), note=document.createElement('textarea'), save=document.createElement('button');label.textContent='Internal note for '+id;label.append(note);save.textContent='Save ticket note';form.append(label,save);document.querySelector('#details').replaceChildren(form);form.onsubmit=e=>{e.preventDefault();submit({query:document.querySelector('#query').value,ticket:id,note:note.value});};note.focus();};
+    document.querySelector('#results').append(button);
+   }
+   document.querySelector('.ticket')?.focus();
+  };
+ }else{status.textContent='Unknown task';}
+}
+init();
+</script></html>
