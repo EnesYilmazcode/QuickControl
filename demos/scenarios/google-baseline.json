@@ -1,0 +1,38 @@
+{
+  "task": "Find .gov pages on heat pump efficiency in cold climates, excluding sales pages",
+  "settle_seconds": 2,
+  "phases": [
+    {
+      "actions": [
+        {
+          "name": "Type",
+          "arguments": {
+            "loc": [
+              471,
+              383
+            ],
+            "text": "heat pump efficiency\tcold climate\tsale\t.gov"
+          }
+        },
+        {
+          "name": "Shortcut",
+          "arguments": {
+            "shortcut": "enter"
+          }
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "kind": "cdp-snapshot",
+    "url_contains": "google.com/search",
+    "expected_query": {
+      "as_q": "heat pump efficiency",
+      "as_epq": "cold climate",
+      "as_eq": "sale",
+      "as_sitesearch": ".gov"
+    },
+    "title_contains": "Google Search",
+    "timeout_seconds": 15
+  }
+}

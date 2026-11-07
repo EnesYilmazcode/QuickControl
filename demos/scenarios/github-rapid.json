@@ -1,0 +1,57 @@
+{
+  "task": "Find Python MCP repositories with stars, forks, size and activity filters",
+  "settle_seconds": 2,
+  "phases": [
+    {
+      "actions": [
+        {
+          "name": "Type",
+          "arguments": {
+            "loc": [
+              650,
+              199
+            ],
+            "text": "mcp language:Python",
+            "clear": true
+          }
+        },
+        {
+          "name": "FillForm",
+          "arguments": {
+            "loc": [
+              650,
+              608
+            ],
+            "fields": [
+              ">100",
+              ">10",
+              "<50000",
+              ">2025-01-01"
+            ]
+          }
+        },
+        {
+          "name": "Click",
+          "arguments": {
+            "loc": [
+              1120,
+              199
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "kind": "cdp-snapshot",
+    "url_contains": "github.com/search",
+    "expected_query": {
+      "q": "mcp language:Python stars:>100 forks:>10 size:<50000 pushed:>2025-01-01"
+    },
+    "required_text": [
+      "CursorTouch/Windows-MCP"
+    ],
+    "title_contains": "Repository search results",
+    "timeout_seconds": 15
+  }
+}

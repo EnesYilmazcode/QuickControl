@@ -1,0 +1,39 @@
+﻿{
+  "task": "Estimate a $450k mortgage: 15% down, 30 years, 6.25%, 1.1% tax, $1,800 insurance",
+  "settle_seconds": 2,
+  "phases": [
+    {
+      "actions": [
+        {
+          "name": "Type",
+          "arguments": {
+            "loc": [
+              338,
+              291
+            ],
+            "text": "450000\t15\t\t30\t6.25\t\t\t\t1.1\t\t1800",
+            "clear": true,
+            "press_enter": true
+          }
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "kind": "cdp-snapshot",
+    "url_contains": "calculator.net/mortgage-calculator.html?",
+    "expected_query": {
+      "chouseprice": "450,000",
+      "cdownpayment": "15",
+      "cloanterm": "30",
+      "cinterestrate": "6.25",
+      "cpropertytaxes": "1.1",
+      "chomeins": "1800"
+    },
+    "title_contains": "Mortgage Calculator",
+    "required_text": [
+      "$2,355.12"
+    ],
+    "timeout_seconds": 15
+  }
+}
