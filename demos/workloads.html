@@ -14,6 +14,7 @@ textarea{height:180px}output{display:block;padding:12px;margin-top:14px;backgrou
 <main><h1>QuickControl speed lab</h1><p id="description"></p><section id="task"></section><output id="status">Ready · complete the task using normal desktop input</output><small id="run"></small></main>
 <script>
 const params=new URLSearchParams(location.search), task=params.get('task')||'form', run=params.get('run')||crypto.randomUUID();
+document.title='QuickControl demo | '+run;
 document.querySelector('#run').textContent=`Synthetic local data · task ${task} · run ${run}`;
 const host=document.querySelector('#task'), status=document.querySelector('#status');
 let submitting=false;
