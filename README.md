@@ -16,6 +16,10 @@ benchmark harness. There is also an experimental profile for faster short-text
 entry. This repository contains the client and experiments; it depends on the
 upstream server.
 
+The QuickControl server profile also uses **double-tap Escape** for deliberate
+takeover, ignores accidental physical input while AI control is active, removes
+the old shortcut banner, and captures the primary monitor by default.
+
 ## Run
 
 Requires Windows, [uv](https://docs.astral.sh/uv/), and an interactive desktop.
@@ -75,6 +79,49 @@ back. Upstream ownership checks still apply to desktop input.
 Use `@file.json` arguments in PowerShell to avoid native-command quoting issues.
 Run without a tool name to list the server's tool schemas.
 
+## Deliberate control and one monitor
+
+Use the QuickControl server profile to change the desktop behavior:
+
+```powershell
+uv run --with mcp python quickcontrol.py --config profile.example.toml Screenshot
+```
+
+Run from this directory, or use an absolute path to `server.py` in the profile.
+For a persistent MCP connection, point your MCP client's Windows MCP registration
+at `uv run --python 3.14 --with windows-mcp==0.8.8 python /absolute/path/server.py serve`.
+Restart that server connection after changing its registration; an already-running
+process keeps its existing behavior.
+
+While the blue control indicator is active, ordinary physical mouse movement,
+clicks, wheel events, and keys are ignored. Press and release **Escape twice
+within 500 ms** to hand control back. Holding Escape does not count as two taps;
+an intervening key or a new control lease resets the sequence. Injected AI input
+continues normally. The old Ctrl+Alt+Shift+Backspace banner is removed; the blue
+edge and cursor indicator remain.
+
+Double Escape cancels the active input lease through the upstream handoff path,
+releases AI-held inputs, and returns control to you. It does not terminate the
+server process. Upstream idle cooldown, lease expiry, and fault-release behavior
+remain in place. A stopped watchdog, broken indicator, or stale hook still
+releases control instead of waiting for Escape. Input outside an active lease
+follows upstream behavior.
+
+Screenshot and Snapshot capture the **primary monitor** when no display or region
+is supplied. Other monitors remain available explicitly:
+
+```json
+{"display": [1]}
+{"display": [0, 1]}
+{"region": [1920, 0, 2120, 200]}
+```
+
+These examples select the second display, both displays, and a region in virtual
+desktop coordinates. Check your display inventory before choosing indices or
+coordinates. The actual primary monitor is detected rather than assumed to be
+display zero. Single-monitor capture does not confine automation input to that
+monitor. Tool descriptions report the new default.
+
 ## Results you can inspect
 
 Each run gets its own directory under `~/.codex/tmp/windows-mcp/`:
@@ -131,7 +178,8 @@ From this repository directory:
 uv run --with mcp python quickcontrol.py --config fast-profile.example.toml --batch '@benchmark.json'
 ```
 
-This starts the experimental server for that invocation only. To test typing,
+This starts the experimental server for that invocation only, including the
+deliberate-control and primary-monitor defaults above. To test typing,
 open `fixture.html`, observe the current field positions, and create a batch
 with Type or MultiEdit calls. The **Verify locally** button checks three exact
 values: `alpha-123`, `bravo+456`, and `charlie {789}`.
@@ -147,12 +195,22 @@ does not preserve every rich clipboard format.
 ## Development
 
 ```powershell
-python -m unittest -v test_client.py
+python -m unittest discover -v
 powershell -NoProfile -File .\benchmark.ps1
 ```
 
-The tests cover batch cancellation, user control, SDK field compatibility, and
-coordinate conversion. They do not touch the desktop. The benchmark makes real
+The tests cover batch cancellation, user control, SDK field compatibility,
+coordinate conversion, Escape timing, physical versus injected input, capture
+suspension, fault release, and monitor selection. They do not touch the desktop.
+A Windows-only integration smoke check uses real upstream hook structures without
+installing OS hooks or injecting physical input:
+
+```powershell
+uv run --python 3.14 --with windows-mcp==0.8.8 python verify_native_profile.py
+```
+
+This simulates callback data; a physical double-Escape gesture still needs a
+manual check on the target keyboard. The capture benchmark makes real
 read-only captures and takes about 35 seconds on the measured setup.
 
 ## Credits and license
