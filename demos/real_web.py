@@ -170,6 +170,73 @@ def verify_cdp(verification, port):
         time.sleep(.1)
 
 
+def verify_cdp_snapshot(verification, port):
+    """Check URL, query and title from /json/list, then page text.
+
+    Chrome's side-effect guard rejects DOM reads such as querySelector, so the
+    only evaluated code is the fixed expression below; scenarios supply data,
+    never code.
+    """
+    import websocket
+    from urllib.parse import parse_qs
+    if not port or not 1 <= port <= 65535:
+        raise ValueError('CDP verification requires --debug-port for the isolated browser')
+    contains = verification['url_contains']
+    expected_query = verification.get('expected_query', {})
+    title = verification.get('title_contains', '')
+    required = verification.get('required_text', [])
+    timeout = float(verification.get('timeout_seconds', 15))
+    if not 0 < timeout <= 120:
+        raise ValueError('CDP verification timeout must be between zero and 120 seconds')
+    started, attempts, observed, last_error = time.perf_counter(), 0, {}, None
+    while True:
+        attempts += 1
+        connection = None
+        try:
+            with urlopen(f'http://127.0.0.1:{port}/json/list', timeout=2) as response:
+                targets = [t for t in json.load(response)
+                           if t.get('type') == 'page' and contains in t.get('url', '')]
+            if len(targets) != 1:
+                raise ValueError(f'Expected one matching page; found {len(targets)}')
+            target = targets[0]
+            query = {k: v[0] for k, v in parse_qs(urlsplit(target['url']).query).items()}
+            observed = {'url': target['url'], 'title': target.get('title', ''), 'query': query}
+            checks = {'query': all(query.get(k) == v for k, v in expected_query.items()),
+                      'title': title in observed['title']}
+            if all(checks.values()) and required:
+                endpoint = target['webSocketDebuggerUrl']
+                parts = urlsplit(endpoint)
+                if parts.hostname not in ('localhost', '127.0.0.1', '::1') or parts.port != port:
+                    raise ValueError('Verifier refuses a debugger outside the launched local port')
+                connection = websocket.create_connection(endpoint, timeout=2, origin=f'http://localhost:{port}')
+                connection.send(json.dumps({'id': 1, 'method': 'Runtime.evaluate', 'params': {
+                    'expression': 'document.body.innerText', 'returnByValue': True}}))
+                while True:
+                    response = json.loads(connection.recv())
+                    if response.get('id') == 1:
+                        break
+                text = response.get('result', {}).get('result', {}).get('value') or ''
+                checks['required_text'] = all(item in text for item in required)
+            observed['checks'] = checks
+            last_error = None
+            if all(checks.values()):
+                return {'passed': True, 'status': 'verified', 'method': 'read-only-cdp-snapshot',
+                        'observed': observed, 'expected_query': expected_query,
+                        'required_text': required, 'attempts': attempts,
+                        'elapsed_ms': round((time.perf_counter()-started)*1000, 3)}
+        except Exception as error:
+            last_error = f'{type(error).__name__}: {error}'
+        finally:
+            if connection:
+                connection.close()
+        if time.perf_counter()-started >= timeout:
+            return {'passed': False, 'status': 'verification-timeout', 'method': 'read-only-cdp-snapshot',
+                    'observed': observed, 'expected_query': expected_query, 'required_text': required,
+                    'attempts': attempts, 'last_error': last_error,
+                    'elapsed_ms': round((time.perf_counter()-started)*1000, 3)}
+        time.sleep(.1)
+
+
 async def main():
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -235,7 +302,7 @@ async def main():
                 states = [json.loads(b.text).get('state') for b in status.content if b.type == 'text']
                 if states != ['ready']:
                     raise RuntimeError(f'ControlStatus not ready: {states}')
-                launch_args = ['--user-data-dir='+str(ROOT/'artifacts'/'real-browser'), '--no-first-run',
+                launch_args = ['--user-data-dir='+str(output/'browser-profile'), '--no-first-run',
                                '--app='+args.url, '--window-position=60,60', '--window-size=1240,900']
                 if args.debug_port:
                     launch_args += [f'--remote-debugging-port={args.debug_port}',
@@ -247,6 +314,7 @@ async def main():
                     await gate(output/'launch-go')
                 handle, caption = identify_window(args.title)
                 result['initial_title'] = caption
+                await asyncio.sleep(1)
                 await screenshot('before')
                 if args.inspect:
                     await gate(output/'go')
@@ -280,6 +348,8 @@ async def main():
                 outcome = None
                 if verification_kind == 'cdp':
                     outcome = await asyncio.to_thread(verify_cdp, plan['verification'], args.debug_port)
+                elif verification_kind == 'cdp-snapshot':
+                    outcome = await asyncio.to_thread(verify_cdp_snapshot, plan['verification'], args.debug_port)
                 elif verification_kind == 'file':
                     outcome = await asyncio.to_thread(review_outcome, plan, review_path)
                 ended = time.perf_counter()
