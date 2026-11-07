@@ -1,0 +1,6 @@
+# Run from the QuickControl repository directory, or make fast_server.py absolute.
+# Pass this file to quickcontrol.py --config; this does not change your default server.
+[mcp_servers.windows-mcp]
+command = 'uv'
+args = ['run', '--python', '3.14', '--with', 'windows-mcp==0.8.8', 'python', 'fast_server.py', 'serve']
+startup_timeout_sec = 120
