@@ -1,0 +1,40 @@
+{
+  "baseline": "artifacts\\real-web\\20261107-114147-baseline-ea6006\\0.mp4",
+  "optimized": "artifacts\\real-web\\20261107-114259-rapid-401058\\0.mp4",
+  "source_durations_seconds": [
+    6.766667,
+    3.666667
+  ],
+  "output_duration_seconds": 6.766667,
+  "source_crop_xywh": [
+    20,
+    40,
+    1200,
+    820
+  ],
+  "source_dimensions_required": [
+    1240,
+    900
+  ],
+  "playback": "Original speed; shorter final frame held; no source frames cut",
+  "alignment": "Original recording starts; no automatic click alignment",
+  "caption_warm_gui_seconds": [
+    5.27,
+    1.9
+  ],
+  "scope": "Real calculator.net mortgage estimate, 6 fields; warm GUI input excludes startup and agent reasoning",
+  "audit_frames": {
+    "first": {
+      "path": "assets\\mortgage-demo-first.png",
+      "seconds": 0.05
+    },
+    "middle": {
+      "path": "assets\\mortgage-demo-middle.png",
+      "seconds": 3.3833335
+    },
+    "final": {
+      "path": "assets\\mortgage-demo-final.png",
+      "seconds": 6.666667
+    }
+  }
+}
