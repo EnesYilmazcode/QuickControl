@@ -17,6 +17,8 @@ import shutil
 import sys
 import time
 import uuid
+from urllib.parse import urlsplit
+from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -103,6 +105,71 @@ def review_outcome(plan, review_path):
             'reason': 'A screenshot or title alone does not establish task success'}
 
 
+def verify_cdp(verification, port):
+    """Observe this run's isolated browser; never enter task input through CDP.
+
+    Expressions are reviewed scenario literals, not website-supplied code.
+    throwOnSideEffect additionally makes Chrome reject mutating evaluation.
+    Only a local target on the explicitly launched debug port is permitted.
+    """
+    import websocket
+    if not port or not 1 <= port <= 65535:
+        raise ValueError('CDP verification requires --debug-port for the isolated browser')
+    expression = verification['expression']
+    contains = verification['url_contains']
+    expected = verification.get('expected', True)
+    timeout = float(verification.get('timeout_seconds', 15))
+    if not isinstance(expression, str) or not isinstance(contains, str) or not contains:
+        raise ValueError('CDP verification requires a reviewed expression and nonempty URL filter')
+    if not 0 < timeout <= 120:
+        raise ValueError('CDP verification timeout must be between zero and 120 seconds')
+    started, attempts, actual, last_error, observed_url = time.perf_counter(), 0, None, None, None
+    while True:
+        attempts += 1
+        connection = None
+        try:
+            with urlopen(f'http://127.0.0.1:{port}/json/list', timeout=2) as response:
+                targets = json.load(response)
+            targets = [target for target in targets if target.get('type') == 'page'
+                       and contains in target.get('url', '')]
+            if len(targets) != 1:
+                raise ValueError(f'Expected one matching isolated browser target; found {len(targets)}')
+            target = targets[0]
+            endpoint = target['webSocketDebuggerUrl']
+            endpoint_parts = urlsplit(endpoint)
+            if endpoint_parts.hostname not in ('localhost', '127.0.0.1', '::1') or endpoint_parts.port != port:
+                raise ValueError('Verifier refuses a debugger outside the launched local port')
+            connection = websocket.create_connection(endpoint, timeout=2, origin=f'http://localhost:{port}')
+            connection.send(json.dumps({'id': 1, 'method': 'Runtime.evaluate', 'params': {
+                'expression': expression, 'returnByValue': True, 'throwOnSideEffect': True}}))
+            while True:
+                response = json.loads(connection.recv())
+                if response.get('id') == 1:
+                    break
+            if response.get('error') or response.get('result', {}).get('exceptionDetails'):
+                raise ValueError(json.dumps(response.get('error') or response['result']['exceptionDetails']))
+            actual = response['result']['result'].get('value')
+            observed_url, last_error = target['url'], None
+            # JSON equality must preserve Boolean-vs-number distinctions.
+            passed = json.dumps(actual, sort_keys=True) == json.dumps(expected, sort_keys=True)
+            if passed:
+                return {'passed': True, 'status': 'verified', 'method': 'read-only-cdp',
+                        'actual': actual, 'expected': expected, 'observed_url': observed_url,
+                        'expression': expression, 'attempts': attempts,
+                        'elapsed_ms': round((time.perf_counter()-started)*1000, 3)}
+        except Exception as error:
+            last_error = f'{type(error).__name__}: {error}'
+        finally:
+            if connection:
+                connection.close()
+        if time.perf_counter()-started >= timeout:
+            return {'passed': False, 'status': 'verification-timeout', 'method': 'read-only-cdp',
+                    'actual': actual, 'expected': expected, 'observed_url': observed_url,
+                    'expression': expression, 'attempts': attempts, 'last_error': last_error,
+                    'elapsed_ms': round((time.perf_counter()-started)*1000, 3)}
+        time.sleep(.1)
+
+
 async def main():
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -175,6 +242,9 @@ async def main():
                                     f'--remote-allow-origins=http://localhost:{args.debug_port}']
                 await call('App', {'mode': 'launch_executable', 'executable': args.chrome, 'args': launch_args})
                 await asyncio.sleep(args.load_wait)
+                if args.inspect:
+                    await screenshot('launch')
+                    await gate(output/'launch-go')
                 handle, caption = identify_window(args.title)
                 result['initial_title'] = caption
                 await screenshot('before')
@@ -186,6 +256,10 @@ async def main():
                 for action in plan.get('setup', []):
                     assert_foreground(handle)
                     await call(action['name'], action.get('arguments', {}))
+                settle = float(plan.get('settle_seconds', 0))
+                if not 0 <= settle <= 30:
+                    raise ValueError('settle_seconds must be between zero and 30')
+                await asyncio.sleep(settle)
                 if args.record:
                     recorder = Recorder(output/'0.mp4', (60, 60, 1240, 900), ffmpeg=args.ffmpeg)
                     await asyncio.to_thread(recorder.start)
@@ -201,8 +275,18 @@ async def main():
                         if phase.get('observe'):
                             await gate(output/f'phase-{index}-go')
                         excluded += time.perf_counter()-before
+                input_ended = time.perf_counter()
+                verification_kind = plan.get('verification', {}).get('kind')
+                outcome = None
+                if verification_kind == 'cdp':
+                    outcome = await asyncio.to_thread(verify_cdp, plan['verification'], args.debug_port)
+                elif verification_kind == 'file':
+                    outcome = await asyncio.to_thread(review_outcome, plan, review_path)
                 ended = time.perf_counter()
                 result.update(gui_ms=round((ended-started-excluded)*1000, 3),
+                              input_only_ms=round((input_ended-started-excluded)*1000, 3),
+                              verification_ms=round((ended-input_ended)*1000, 3),
+                              timing_end='independently verified outcome' if outcome else 'input completed; manual review outside timer',
                               attempt_wall_ms=round((ended-started)*1000, 3),
                               excluded_observation_ms=round(excluded*1000, 3),
                               final_foreground_title=foreground_title())
@@ -211,9 +295,10 @@ async def main():
                 if recorder:
                     await asyncio.to_thread(recorder.stop)
                     recorder = None
-                if args.wait_review and plan.get('verification', {}).get('kind') != 'file':
+                if args.wait_review and outcome is None:
                     await gate(review_path)
-                outcome = review_outcome(plan, review_path)
+                if outcome is None:
+                    outcome = review_outcome(plan, review_path)
                 result.update(passed=outcome['passed'], verification=outcome)
                 persist()
                 print('RESULT:', json.dumps(result, ensure_ascii=False), flush=True)
