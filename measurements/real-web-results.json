@@ -1,0 +1,250 @@
+[
+  {
+    "run": "20261107-113158-rapid-434a9b",
+    "site": "github",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 2265.205,
+    "input_only_ms": 1866.056,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-113226-baseline-1fe971",
+    "site": "github",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 7545.8,
+    "input_only_ms": 7025.316,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-113339-rapid-9cddc4",
+    "site": "google",
+    "profile": "rapid",
+    "passed": false,
+    "gui_ms": 16325.262,
+    "input_only_ms": 1185.658,
+    "verification": "verification-timeout",
+    "checks": null
+  },
+  {
+    "run": "20261107-113532-rapid-8a8571",
+    "site": "google",
+    "profile": "rapid",
+    "passed": false,
+    "gui_ms": 16810.418,
+    "input_only_ms": 1727.383,
+    "verification": "verification-timeout",
+    "checks": null
+  },
+  {
+    "run": "20261107-113618-baseline-ad60fb",
+    "site": "google",
+    "profile": "baseline",
+    "passed": false,
+    "gui_ms": 20772.918,
+    "input_only_ms": 5694.179,
+    "verification": "verification-timeout",
+    "checks": null
+  },
+  {
+    "run": "20261107-113724-rapid-d7ff40",
+    "site": "mortgage",
+    "profile": "rapid",
+    "passed": false,
+    "gui_ms": 0.006,
+    "input_only_ms": 0.004,
+    "verification": "pending-review",
+    "checks": null
+  },
+  {
+    "run": "20261107-113816-rapid-ca599d",
+    "site": "mortgage",
+    "profile": "rapid",
+    "passed": false,
+    "gui_ms": 16790.483,
+    "input_only_ms": 1743.828,
+    "verification": "verification-timeout",
+    "checks": {
+      "query": false,
+      "title": true
+    }
+  },
+  {
+    "run": "20261107-113852-baseline-aa67d9",
+    "site": "mortgage",
+    "profile": "baseline",
+    "passed": false,
+    "gui_ms": 19868.66,
+    "input_only_ms": 4841.822,
+    "verification": "verification-timeout",
+    "checks": {
+      "query": false,
+      "title": true
+    }
+  },
+  {
+    "run": "20261107-113943-rapid-f3102c",
+    "site": "mortgage",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 1743.425,
+    "input_only_ms": 1363.45,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114004-baseline-a5823d",
+    "site": "mortgage",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 5258.362,
+    "input_only_ms": 4842.85,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114038-rapid-17fc95",
+    "site": "github",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 2503.594,
+    "input_only_ms": 2391.737,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114100-baseline-eb99ab",
+    "site": "github",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 7450.522,
+    "input_only_ms": 6996.185,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114126-rapid-90d7b4",
+    "site": "mortgage",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 2021.962,
+    "input_only_ms": 1723.389,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114147-baseline-ea6006",
+    "site": "mortgage",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 5273.336,
+    "input_only_ms": 4418.206,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114212-rapid-929a05",
+    "site": "github",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 2436.433,
+    "input_only_ms": 2332.929,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114233-baseline-497b5f",
+    "site": "github",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 7692.81,
+    "input_only_ms": 7056.073,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114259-rapid-401058",
+    "site": "mortgage",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 1900.763,
+    "input_only_ms": 1600.592,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114321-baseline-bcc45c",
+    "site": "mortgage",
+    "profile": "baseline",
+    "passed": true,
+    "gui_ms": 6327.855,
+    "input_only_ms": 4424.394,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  },
+  {
+    "run": "20261107-114358-rapid-2b2a60",
+    "site": "github",
+    "profile": "rapid",
+    "passed": true,
+    "gui_ms": 2534.292,
+    "input_only_ms": 2351.785,
+    "verification": "verified",
+    "checks": {
+      "query": true,
+      "title": true,
+      "required_text": true
+    }
+  }
+]
