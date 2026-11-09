@@ -183,6 +183,7 @@ def main():
     parser.add_argument('--timeout', type=int, default=480)
     parser.add_argument('--suffix', default='', help='Extra prompt text (for routine experiments)')
     parser.add_argument('--tag', default='')
+    parser.add_argument('--record', action='store_true', help='Record the 1500x1000 browser area')
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     log = OUT / 'runs.jsonl'
@@ -200,7 +201,16 @@ def main():
                 prompt = PREAMBLE.format(where=where) + task['prompt'] + args.suffix
                 row = {'task': task_id, 'arm': arm, 'rep': rep, 'tag': args.tag, 'model': args.model,
                        'started': time.strftime('%Y-%m-%d %H:%M:%S'), 'dir': run_dir.name}
+                recorder = None
+                if args.record:
+                    sys.path.insert(0, str(ROOT))
+                    from demos.video import Recorder
+                    recorder = Recorder(run_dir / 'screen.mp4', (0, 0, 1500, 1000))
+                    recorder.start()
                 row.update(run_agent(arm, prompt, run_dir, args.model, args.timeout))
+                if recorder:
+                    time.sleep(1.5)
+                    recorder.stop()
                 try:
                     row['check'] = task['check'](row['answer'])
                 except Exception as error:
