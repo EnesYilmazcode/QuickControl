@@ -1,10 +1,34 @@
 <h1 align="center">QuickControl</h1>
 
 <p align="center"><b>Faster Windows control for AI agents.</b><br>
-Enter text and fill stable forms with fewer waits and tool calls.</p>
+Read the screen as text and run a whole plan in one call.</p>
 
-On two real websites, the same agent actions finished about **3x faster**,
-and every run was checked against what the site actually received:
+A real Claude agent did six everyday tasks (a shop checkout, a todo app, GitHub
+search, a Wikipedia lookup, a registration form with custom dropdowns, and the
+Windows Calculator). Same model and prompt; only the tool server changed. Every
+run was checked against the actual page or display:
+
+| Real agent, 12 runs each | Passed | Median time | Median turns |
+| --- | ---: | ---: | ---: |
+| Windows MCP | 5/12 | 65.5 s | 21 |
+| QuickControl before the agent tools | 11/12 | 43.6 s | 15 |
+| **QuickControl with Observe and Act** | **12/12** | **7.1 s** | **4** |
+
+On a clean rerun of the shop checkout, stock took 182.7 s and QuickControl 9.1 s.
+Times include the model's thinking. [Full report](measurements/agent-bench.md)
+
+[![Registration form, before and after the agent tools](assets/agent-demoqa-poster.png)](assets/agent-demoqa-demo.mp4)
+
+`Observe` returns the app as a numbered text list in milliseconds, including every
+dropdown's options. `Act` runs a whole plan (fill, click, select, wait, check)
+across page loads, stops at the first failed step, and returns the new view.
+`SurveyMenus` opens several custom dropdowns in one call and lists what each
+offers. Details in [docs/architecture.md](docs/architecture.md).
+
+### Earlier input-engine results
+
+Before the agent tools, the same agent actions finished about **3x faster**
+on two real websites, and every run was checked against what the site actually received:
 
 | Real task | Windows MCP | QuickControl | Speedup |
 | --- | ---: | ---: | ---: |
@@ -148,7 +172,8 @@ uv run --with mcp python quickcontrol.py --config profile.example.toml Screensho
 
 Run from this directory, or use an absolute path to `server.py` in the profile.
 For a persistent MCP connection, point your MCP client's Windows MCP registration
-at `uv run --python 3.14 --with windows-mcp==0.8.8 python /absolute/path/server.py serve`.
+at `uv run --python 3.14 --with windows-mcp==0.8.8 --with websocket-client python /absolute/path/server.py serve`.
+The browser fast path needs `websocket-client`; without it Observe and Act still work on native windows.
 Restart that server connection after changing its registration; an already-running
 process keeps its existing behavior.
 
@@ -258,7 +283,7 @@ python -m unittest discover -v
 powershell -NoProfile -File .\benchmark.ps1
 ```
 
-The 71 offline tests cover native Unicode input, partial sends, cancellation,
+The 86 offline tests cover Observe/Act plans, saved routines, the injected page script, native Unicode input, partial sends, cancellation,
 form validation, sequence bounds, worker context, batch cancellation, user control, SDK field compatibility,
 coordinate conversion, Escape timing, physical versus injected input, capture
 suspension, fault release, and monitor selection. They do not touch the desktop.
