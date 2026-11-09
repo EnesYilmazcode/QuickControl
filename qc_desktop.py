@@ -252,3 +252,19 @@ def wait_window(title, timeout=10.0):
             return hwnd
         time.sleep(0.03)
     raise TimeoutError(f'Window {title!r} did not become active within {timeout:g} s')
+
+
+def live_rect(element):
+    """Current screen rectangle, read now; None when the element is gone."""
+    try:
+        return _rect(element.raw.GetCurrentPropertyValue(P_RECT))
+    except Exception:
+        return None
+
+
+def alive(element):
+    """The element still exists with the same name (cached COM refs outlive UI)."""
+    try:
+        return (element.raw.GetCurrentPropertyValue(P_NAME) or '').strip() == element.name
+    except Exception:
+        return False
