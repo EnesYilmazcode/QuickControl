@@ -80,24 +80,38 @@ def write_quiet_prefs(profile):
         'safebrowsing': {'enabled': False}}), encoding='utf-8')
 
 
+def start_calculator():
+    subprocess.run(['taskkill', '/IM', 'CalculatorApp.exe', '/F'], capture_output=True)
+    time.sleep(1)
+    subprocess.Popen(['cmd', '/c', 'start', 'calculator:'])
+    time.sleep(3)
+
+
 def setup(task, run_dir):
-    if 'url' in task:
+    urls = task.get('urls') or ([task['url']] if 'url' in task else [])
+    if urls:
         kill_bench_chrome()
         time.sleep(1)
+        if task.get('calc'):
+            start_calculator()
         profile = Path(tempfile.gettempdir()) / f'qc-bench-profile-{run_dir.name}'
+        task['_profile'] = str(profile)
         write_quiet_prefs(profile)
         subprocess.Popen([CHROME, f'--user-data-dir={profile}', f'--remote-debugging-port={PORT}',
                           f'--remote-allow-origins=http://localhost:{PORT}', '--no-first-run',
                           '--no-default-browser-check', '--window-position=0,0',
                           '--disable-features=PasswordLeakDetection,AutofillServerCommunication',
                           '--password-store=basic', '--disable-save-password-bubble',
-                          '--window-size=1500,1000', task['url']])
+                          '--window-size=1500,1000', *urls])
         time.sleep(6)
         from urllib.request import urlopen
         pages = json.load(urlopen(f'http://127.0.0.1:{PORT}/json/list', timeout=5))
         title = next((p['title'] for p in pages if p.get('type') == 'page'), '')
         foreground(title or 'Chrome')
-        return 'A Chrome window is already open in front, showing ' + task['url'] + '.'
+        where = 'A Chrome window is already open in front, showing ' + ' and '.join(urls) + '.'
+        if task.get('calc'):
+            where += ' Windows Calculator is also open behind it.'
+        return where
     if task.get('app') == 'calc':
         subprocess.run(['taskkill', '/IM', 'CalculatorApp.exe', '/F'], capture_output=True)
         time.sleep(1)
@@ -212,7 +226,10 @@ def main():
                     time.sleep(1.5)
                     recorder.stop()
                 try:
-                    row['check'] = task['check'](row['answer'])
+                    if task.get('needs_profile'):
+                        row['check'] = task['check'](row['answer'], task.get('_profile'))
+                    else:
+                        row['check'] = task['check'](row['answer'])
                 except Exception as error:
                     row['check'] = {'passed': False, 'error': f'{type(error).__name__}: {error}'}
                 row['passed'] = bool(row['check'].get('passed'))

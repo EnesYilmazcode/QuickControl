@@ -149,3 +149,81 @@ TASKS = {
 TASKS['sauce-warm'] = dict(TASKS['sauce'], prompt=TASKS['sauce']['prompt']
                            .replace('first name Ada, last name Lovelace, ZIP code 43210',
                                     'first name Grace, last name Hopper, ZIP code 10001'))
+
+
+# ---- Multi-tab, cross-app and install tasks -------------------------------
+
+def all_pages():
+    with urlopen(f'http://127.0.0.1:{PORT}/json/list', timeout=3) as response:
+        return [t for t in json.load(response) if t.get('type') == 'page']
+
+
+def todo_titles():
+    _, stored = page_eval("[...document.querySelectorAll('.todo-list li label')].map(l => l.innerText)", 'todomvc')
+    return stored or []
+
+
+def check_tabs(answer):
+    titles = todo_titles()
+    urls = [p['url'] for p in all_pages()]
+    eiffel = any('1889' in t and 'eiffel' in t.lower() for t in titles)
+    everest = any(('8849' in norm(t) or '8848' in norm(t)) and 'everest' in t.lower() for t in titles)
+    wiki_tabs = sum('wikipedia.org' in u for u in urls)
+    return {'passed': eiffel and everest and wiki_tabs >= 2, 'todos': titles, 'wiki_tabs': wiki_tabs,
+            'tabs': len(urls)}
+
+
+def check_crossapp(answer):
+    titles = todo_titles()
+    calc = check_calc('')
+    todo_ok = any('129.94' in t for t in titles)
+    return {'passed': todo_ok and '129.94' in norm(calc.get('display')), 'todos': titles,
+            'display': calc.get('display')}
+
+
+EXTENSION_ID = 'bcjindcccaagfpapjjmafapmmgkkhgoa'  # JSON Formatter
+
+
+def check_install(answer, profile=None):
+    import time
+    from pathlib import Path
+    installed = pinned = False
+    if profile:
+        deadline = time.time() + 20  # Chrome writes Preferences on a short delay.
+        while time.time() < deadline:
+            installed = (Path(profile) / 'Default' / 'Extensions' / EXTENSION_ID).exists()
+            try:
+                prefs = json.loads((Path(profile) / 'Default' / 'Preferences').read_text(encoding='utf-8'))
+                pinned = EXTENSION_ID in prefs.get('extensions', {}).get('pinned_extensions', [])
+            except Exception:
+                pass
+            if installed and pinned:
+                break
+            time.sleep(1)
+    return {'passed': installed and pinned, 'installed': installed, 'pinned': pinned}
+
+
+TASKS['tabs'] = {
+    'urls': ['https://todomvc.com/examples/react/dist/'],
+    'prompt': ('Using two new browser tabs, look up on Wikipedia the year the Eiffel Tower was completed '
+               '(one tab) and the elevation of Mount Everest in metres (another tab). Keep those tabs open. '
+               'Then go back to the TodoMVC tab and add two todos: "Eiffel Tower <year>" and '
+               '"Everest <metres> m", with the real numbers filled in.'),
+    'check': check_tabs,
+}
+TASKS['crossapp'] = {
+    'urls': ['https://www.saucedemo.com/', 'https://todomvc.com/examples/react/dist/'],
+    'calc': True,
+    'prompt': ('Two browser tabs are open: Swag Labs and TodoMVC. Log in to Swag Labs as standard_user '
+               'with password secret_sauce and add up the prices of all six products using the Windows '
+               'Calculator (it is open; leave the total on its display). Then, in the TodoMVC tab, add a todo '
+               'reading "Swag total <total>" with the total you got.'),
+    'check': check_crossapp,
+}
+TASKS['install'] = {
+    'urls': ['https://chromewebstore.google.com/detail/json-formatter/' + EXTENSION_ID],
+    'prompt': ('Install the JSON Formatter extension shown on this Chrome Web Store page into this browser, '
+               'then pin it to the Chrome toolbar so its icon is always visible.'),
+    'check': check_install,
+    'needs_profile': True,
+}
