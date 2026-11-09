@@ -4,3 +4,7 @@ artifacts/
 fixture-result.json
 fallback-comparison.json
 *.local.toml
+bench/.venv/
+bench/results/
+bench/results-discarded/
+bench/*.log
