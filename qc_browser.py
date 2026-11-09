@@ -153,6 +153,7 @@ LIB = r"""
     if (typeof target === 'number') {
       const el = lib.els[target - 1];
       if (!el || !el.isConnected) throw new Error('Element [' + target + '] is gone (page changed). Use a {"text": ...} target or Observe again.');
+      lib.last = el;
       return el;
     }
     const want = clean(target.text || target.name || '').toLowerCase();
@@ -177,7 +178,21 @@ LIB = r"""
     }
     if (!hits.length) throw new Error('No element matches ' + JSON.stringify(target));
     if (nth >= hits.length) throw new Error('Only ' + hits.length + ' elements match ' + JSON.stringify(target));
+    lib.last = hits[nth];
     return hits[nth];
+  },
+  // The element the previous resolve() returned; labels can change after typing.
+  lastEl() {
+    if (!lib.last || !lib.last.isConnected) throw new Error('The element is gone (page changed)');
+    return lib.last;
+  },
+  lastValue() { const el = lib.lastEl(); return el.isContentEditable ? el.innerText : el.value; },
+  lastInfo() { return lib.info(lib.lastEl()); },
+  // A label target that finds this same element again on a later run.
+  describeLast() {
+    const el = lib.lastEl(), d = lib.info(el), name = d.name.toLowerCase();
+    const same = lib.scan(true).filter(e => { const i = lib.info(e); return i.role === d.role && i.name.toLowerCase() === name; });
+    return {text: d.name, role: d.role, nth: Math.max(0, same.indexOf(el))};
   },
   point(target) {
     const el = lib.resolve(target);
@@ -202,6 +217,9 @@ LIB = r"""
     const el = lib.resolve(target);
     return el.isContentEditable ? el.innerText : el.value;
   },
+  // Survey bookkeeping by element identity, not text.
+  popupMark() { for (const i of lib.popupItems()) i.el.__qcSeen = true; return true; },
+  popupNew() { return lib.popupItems().filter(i => !i.el.__qcSeen).map(i => ({s: i.s, r: [i.r.left, i.r.top, i.r.width, i.r.height]})); },
   choose(target, option) {
     const el = lib.resolve(target);
     if (el.tagName !== 'SELECT') throw new Error('Element is not a native select; click it, then click the option');
@@ -269,7 +287,14 @@ class Page:
                                               suppress_origin=False)
         self.next_id = 0
         self.lock = threading.Lock()
-        self.events = []
+        self.events = []  # (sequence, method, params)
+        self.seq = 0
+        self.main_frame = None
+        try:
+            self.send('Page.enable')
+            self.main_frame = self.send('Page.getFrameTree')['frameTree']['frame']['id']
+        except CDPError:
+            pass
 
     def send(self, method, params=None, timeout=15):
         with self.lock:
@@ -284,8 +309,9 @@ class Page:
                         raise CDPError(f"{method}: {message['error'].get('message')}")
                     return message.get('result', {})
                 if 'method' in message:
-                    self.events.append(message['method'])
-                    del self.events[:-50]
+                    self.seq += 1
+                    self.events.append((self.seq, message['method'], message.get('params', {})))
+                    del self.events[:-200]
 
     def eval(self, expression, timeout=15):
         result = self.send('Runtime.evaluate', {'expression': expression, 'returnByValue': True,
@@ -298,6 +324,19 @@ class Page:
 
     def lib(self, call, timeout=15):
         return self.eval(LIB + ';window.__qcLib.' + call, timeout)
+
+    def mark(self):
+        return {'seq': self.seq, 'state': state_token(self)}
+
+    def main_events(self, since):
+        out = []
+        for seq, method, params in self.events:
+            if seq <= since:
+                continue
+            frame = params.get('frameId') or params.get('frame', {}).get('id')
+            if method == 'Page.loadEventFired' or frame in (None, self.main_frame):
+                out.append(method)
+        return out
 
     def close(self):
         try:
@@ -330,22 +369,110 @@ class Browser:
     def available(self):
         return bool(self.targets()[1])
 
+    def _open(self, port, target):
+        if self.page is None or self.page.target_id != target['id']:
+            if self.page:
+                self.page.close()
+            self.page = Page(port, target)
+            self.port = port
+        return self.page
+
     def connect(self, prefer_title=None):
+        """Stay on the tab we are driving while it exists; otherwise prefer the
+        tab whose title the Chrome window shows, else the most recent tab."""
         port, pages = self.targets()
         if not pages:
             raise CDPError('No Chrome with a debugging port found. Start one with OpenBrowser.')
-        chosen = pages[0]
         if prefer_title:
             for page in pages:
-                if page.get('title') and page['title'] in prefer_title:
-                    chosen = page
-                    break
-        if self.page is None or self.page.target_id != chosen['id']:
-            if self.page:
-                self.page.close()
-            self.page = Page(port, chosen)
-            self.port = port
-        return self.page
+                if page.get('title') and prefer_title.startswith(page['title']):
+                    return self._open(port, page)
+        if self.page is not None:
+            for page in pages:
+                if page['id'] == self.page.target_id:
+                    return self.page
+        return self._open(port, pages[0])
+
+    def front_tab(self, window_title):
+        """True when a Chrome window titled like one of our tabs is in front.
+        Electron apps and a normal Chrome share the window class, so the class
+        alone does not prove this is the debug browser."""
+        port, pages = self.targets()
+        for page in pages:
+            title = page.get('title') or ''
+            if title and window_title.startswith(title) and 'Chrome' in window_title:
+                self._open(port, page)
+                return True
+        return False
+
+    def tab_ids(self):
+        return [p['id'] for p in self.targets()[1]]
+
+    def tabs(self):
+        return [(p['id'], p.get('title') or p.get('url', '')) for p in self.targets()[1]]
+
+    def _http(self, path, method='GET'):
+        from urllib.request import Request
+        with urlopen(Request(f'http://127.0.0.1:{self.port}{path}', method=method), timeout=5) as response:
+            body = response.read().decode('utf-8', 'replace')
+        try:
+            return json.loads(body)
+        except ValueError:
+            return body
+
+    def activate(self, target_id):
+        self._http(f'/json/activate/{target_id}')
+        port, pages = self.targets()
+        for page in pages:
+            if page['id'] == target_id:
+                return self._open(port, page)
+        raise CDPError('That tab closed')
+
+    def follow_new_tab(self, before):
+        """A click that opened a tab: Chrome shows it, so drive it too."""
+        time.sleep(0.05)
+        port, pages = self.targets()
+        fresh = [p for p in pages if p['id'] not in before]
+        if not fresh:
+            return None
+        page = self._open(port, fresh[0])
+        settle(page, page.mark(), quiet=0.5)
+        return fresh[0].get('title') or fresh[0].get('url')
+
+    def tab_step(self, step):
+        what = step['tab']
+        if what == 'new':
+            url = str(step.get('url', 'about:blank'))
+            if url != 'about:blank' and not url.startswith(('http://', 'https://')):
+                raise ValueError('tab new needs an http(s) url')
+            from urllib.parse import quote
+            created = self._http('/json/new?' + quote(url, safe=':/?&=#%'), method='PUT')
+            page = self.activate(created['id'])
+            if url != 'about:blank':
+                wait_for(page, {'url': url.split('#')[0][:40]}, 15)
+                settle(page, page.mark(), quiet=0.5)
+            return f'opened new tab {url}'
+        if what == 'close':
+            if self.page is None:
+                raise CDPError('No tab to close')
+            closing = self.page.target_id
+            self.page.close()
+            self.page = None
+            self._http(f'/json/close/{closing}')
+            time.sleep(0.2)
+            page = self.connect()
+            self._http(f'/json/activate/{page.target_id}')
+            return 'closed the tab'
+        want = str(what).lower()
+        for target_id, title in self.tabs():
+            if want in title.lower():
+                self.activate(target_id)
+                return f'switched to tab "{title}"'
+        for page in self.targets()[1]:
+            if want in page.get('url', '').lower():
+                self.activate(page['id'])
+                return f'switched to tab "{page.get("title")}"'
+        raise LookupError(f'No tab matches {what!r}; open tabs: {[t for _, t in self.tabs()]}')
 
     def call(self, fn, prefer_title=None):
         page = self.connect(prefer_title)
@@ -358,13 +485,15 @@ class Browser:
             raise CDPError(f'Browser connection dropped: {error}') from None
 
 
-def format_observation(data, elapsed_ms=None, max_items=150):
+def format_observation(data, elapsed_ms=None, max_items=150, tabs=None):
     lines = [f"Browser: {data['title']} | {data['url']}"]
     sy, sh = data['scroll']
     extra = f"scroll {sy}/{sh}" if sh else 'no scroll'
     if elapsed_ms is not None:
         extra += f', observed in {elapsed_ms:.0f} ms'
     lines[0] += f'  ({extra})'
+    if tabs and len(tabs) > 1:
+        lines.append('Tabs: ' + ' | '.join(tabs) + '  (switch with {"tab": "words"})')
     for index, item in enumerate(data['items'][:max_items], 1):
         line = f"[{index}] {item['role']} \"{item['name']}\""
         if item.get('ctx'):
@@ -441,8 +570,18 @@ def state_token(page):
     return page.eval('[location.href, document.readyState, performance.timeOrigin]')
 
 
-def settle(page, before, quiet=0.12, timeout=15.0):
-    """Wait for a click/Enter's consequences: navigation if one starts, else a short quiet period."""
+STARTS = ('Page.frameRequestedNavigation', 'Page.frameStartedLoading', 'Page.frameScheduledNavigation',
+          'Page.frameNavigated')
+DONE = ('Page.loadEventFired', 'Page.frameStoppedLoading')
+
+
+def settle(page, before, quiet=0.15, timeout=15.0):
+    """After a click or Enter: wait for a page load if one started, else a short quiet period.
+
+    `before` is page.mark(). Chrome's navigation events show a load as soon as it
+    is requested, before the URL changes, so a slow server is not mistaken for
+    "nothing happened".
+    """
     deadline = time.monotonic() + timeout
     end_quiet = time.monotonic() + quiet
     navigated = False
@@ -453,15 +592,20 @@ def settle(page, before, quiet=0.12, timeout=15.0):
             time.sleep(0.05)  # Mid-navigation the context can vanish briefly.
             navigated = True
             continue
-        if now[0] != before[0] or now[2] != before[2]:
+        events = page.main_events(before['seq'])
+        if any(e in STARTS for e in events) or now[0] != before['state'][0] or now[2] != before['state'][2]:
             navigated = True
-        if navigated and now[1] == 'complete':
-            time.sleep(0.15)
-            return True
-        if not navigated and time.monotonic() >= end_quiet:
+        if navigated:
+            loaded = any(e in DONE for e in events) and now[1] == 'complete'
+            if loaded or (now[1] == 'complete' and now[2] != before['state'][2]):
+                time.sleep(0.1)
+                return True
+        elif time.monotonic() >= end_quiet:
             return False
         time.sleep(0.03)
-    return navigated
+    if navigated:
+        raise CDPError(f'Page load did not finish within {timeout:g} s')
+    return False
 
 
 def wait_for(page, condition, timeout):
