@@ -22,10 +22,26 @@ class FakePage:
 
 
 class PlanTests(unittest.TestCase):
-    def test_variables_fill_templates_and_keep_originals(self):
+    def plan(self, steps, step_fn, variables=None, save_as=None, folder=None):
+        with mock.patch.object(agent_tools, 'browser_step', step_fn), \
+             mock.patch.object(agent_tools.BROWSER, 'connect', lambda: None), \
+             mock.patch.object(agent_tools, 'ROUTINES', folder or Path(tempfile.gettempdir())):
+            return agent_tools.run_plan(agent_tools.prepare(steps, variables or {}), kind='browser',
+                                        checkpoint=lambda: None, get_desktop=None, save_as=save_as)
+
+    def saved(self, steps, step_fn, variables=None):
+        folder = Path(tempfile.mkdtemp())
+        try:
+            failed, _, _ = self.plan(steps, step_fn, variables, 'r', folder)
+            self.assertIsNone(failed)
+            return json.loads((folder / 'r.json').read_text(encoding='utf-8'))
+        finally:
+            shutil.rmtree(folder)
+
+    def test_variables_fill_values_and_keep_originals(self):
         steps = agent_tools.prepare([{'fill': 'Name', 'text': 'Hi {{who}}'}], {'who': 'Ada'})
         self.assertEqual(steps[0]['text'], 'Hi Ada')
-        self.assertEqual(steps[0]['_template'], 'Hi {{who}}')
+        self.assertEqual(steps[0]['_orig']['text'], 'Hi {{who}}')
 
     def test_plan_bounds(self):
         with self.assertRaises(ValueError):
@@ -42,16 +58,12 @@ class PlanTests(unittest.TestCase):
             calls.append(s)
             if s.get('click') == 'bad':
                 raise RuntimeError('covered')
-            record(s)
+            record(None)
             return 'ok'
         folder = Path(tempfile.mkdtemp())
         try:
-            with mock.patch.object(agent_tools, 'browser_step', step), \
-                 mock.patch.object(agent_tools.BROWSER, 'connect', lambda: None), \
-                 mock.patch.object(agent_tools, 'ROUTINES', folder):
-                failed, log, _ = agent_tools.run_plan(
-                    [{'click': 'a'}, {'click': 'bad'}, {'click': 'c'}], kind='browser',
-                    checkpoint=lambda: None, get_desktop=None, save_as='x')
+            failed, log, _ = self.plan([{'click': 'a'}, {'click': 'bad'}, {'click': 'c'}], step,
+                                      save_as='x', folder=folder)
             self.assertEqual(failed, 1)
             self.assertEqual(len(calls), 2)
             self.assertIn('FAILED: covered', log[1])
@@ -59,39 +71,86 @@ class PlanTests(unittest.TestCase):
         finally:
             shutil.rmtree(folder)
 
-    def test_successful_plan_saves_routine_with_variables(self):
-        def step(page, s, record):
-            record({'fill': {'text': 'Name'}, 'text': s.get('_template', s.get('text'))})
-            return 'ok'
-        folder = Path(tempfile.mkdtemp())
-        try:
-            with mock.patch.object(agent_tools, 'browser_step', step), \
-                 mock.patch.object(agent_tools.BROWSER, 'connect', lambda: None), \
-                 mock.patch.object(agent_tools, 'ROUTINES', folder):
-                steps = agent_tools.prepare([{'fill': 'Name', 'text': '{{who}}'}], {'who': 'Ada'})
-                failed, _, _ = agent_tools.run_plan(steps, kind='browser', checkpoint=lambda: None,
-                                                    get_desktop=None, save_as='sign up')
-                saved = json.loads((folder / 'sign-up.json').read_text(encoding='utf-8'))
-                self.assertIsNone(failed)
-                self.assertEqual(saved['vars'], ['who'])
-                self.assertEqual(saved['steps'][0]['text'], '{{who}}')
-                self.assertIn('sign-up(who)', agent_tools.routine_names()[0])
-        finally:
-            shutil.rmtree(folder)
+    def test_routine_keeps_every_placeholder(self):
+        steps = [{'goto': 'https://shop.test/{{id}}'}, {'fill': 'Name', 'text': '{{who}}'},
+                 {'type': '{{note}}'}, {'wait': {'text': '{{who}}'}}]
+        saved = self.saved(steps, lambda p, s, r: r(None) or 'ok', {'id': 7, 'who': 'Ada', 'note': 'hi'})
+        self.assertEqual(saved['vars'], ['id', 'note', 'who'])
+        self.assertEqual(saved['steps'][0]['goto'], 'https://shop.test/{{id}}')
+        self.assertEqual(saved['steps'][2]['type'], '{{note}}')
+
+    def test_routine_keeps_near_and_nth_on_label_targets(self):
+        steps = [{'click': {'text': 'Add to cart', 'near': 'Blue shirt', 'nth': 1}}]
+        saved = self.saved(steps, lambda p, s, r: r({'text': 'Add to cart', 'role': 'button', 'nth': 0}) or 'ok')
+        self.assertEqual(saved['steps'][0]['click'], {'text': 'Add to cart', 'near': 'Blue shirt', 'nth': 1})
+
+    def test_routine_replaces_numbers_with_the_element_used(self):
+        steps = [{'click': 9}]
+        saved = self.saved(steps, lambda p, s, r: r({'text': 'Add to cart', 'role': 'button', 'nth': 3}) or 'ok')
+        self.assertEqual(saved['steps'][0]['click'], {'text': 'Add to cart', 'role': 'button', 'nth': 3})
+
+    def test_routine_names_are_sanitized_for_save_and_load(self):
+        self.assertEqual(agent_tools.routine_path('buy shirt').name, 'buy-shirt.json')
+        self.assertEqual(agent_tools.routine_path('../../x').name, 'x.json')
+        self.assertEqual(agent_tools.routine_path('../../x').parent, agent_tools.ROUTINES)
+        with self.assertRaises(ValueError):
+            agent_tools.routine_path('../')
 
     def test_checkpoint_runs_before_every_step(self):
         order = []
+        self.plan([{'click': 1}, {'click': 2}], lambda p, s, r: order.append('step') or 'ok')
+        self.assertEqual(order, ['step', 'step'])
+        order.clear()
         with mock.patch.object(agent_tools, 'browser_step', lambda p, s, r: order.append('step') or 'ok'), \
              mock.patch.object(agent_tools.BROWSER, 'connect', lambda: None):
-            agent_tools.run_plan([{'click': 1}, {'click': 2}], kind='browser',
+            agent_tools.run_plan(agent_tools.prepare([{'click': 1}, {'click': 2}], {}), kind='browser',
                                  checkpoint=lambda: order.append('check'), get_desktop=None)
         self.assertEqual(order, ['check', 'step', 'check', 'step'])
 
-    def test_string_targets_become_label_targets(self):
+    def test_only_integers_are_element_numbers(self):
         self.assertEqual(agent_tools._target({'click': 'Login'}, 'click'), {'text': 'Login'})
-        self.assertEqual(agent_tools._target({'click': '7'}, 'click'), 7)
+        self.assertEqual(agent_tools._target({'click': '7'}, 'click'), {'text': '7'})
+        self.assertEqual(agent_tools._target({'click': 7}, 'click'), 7)
+        with self.assertRaises(ValueError):
+            agent_tools._target({'click': True}, 'click')
         self.assertEqual(agent_tools._target({'click': {'text': 'Add', 'near': 'Onesie', 'x': 1}}, 'click'),
                          {'text': 'Add', 'near': 'Onesie'})
+
+
+class SettleTests(unittest.TestCase):
+    class SlowServerPage:
+        """Navigation requested at once, URL changes only after a slow response."""
+        def __init__(self, commit_after):
+            self.calls, self.commit_after, self.seq, self.main_frame = 0, commit_after, 0, 'main'
+            self.events = []
+
+        def eval(self, expression, timeout=15):
+            self.calls += 1
+            if self.calls == 1:
+                self.seq += 1
+                self.events.append((self.seq, 'Page.frameRequestedNavigation', {'frameId': 'main'}))
+            if self.calls < self.commit_after:
+                return ['https://a/', 'complete', 1.0]
+            if self.calls == self.commit_after:
+                self.seq += 1
+                self.events.append((self.seq, 'Page.loadEventFired', {}))
+            return ['https://b/', 'complete', 2.0]
+
+        main_events = qc_browser.Page.main_events
+
+    def test_slow_navigation_is_not_mistaken_for_nothing(self):
+        page = self.SlowServerPage(commit_after=20)  # about 0.6 s, past the quiet window
+        self.assertTrue(qc_browser.settle(page, {'seq': 0, 'state': ['https://a/', 'complete', 1.0]}))
+        self.assertGreaterEqual(page.calls, 20)
+
+    def test_no_navigation_returns_after_quiet_window(self):
+        class Still:
+            seq, events, main_frame = 0, [], 'main'
+            main_events = qc_browser.Page.main_events
+
+            def eval(self, expression, timeout=15):
+                return ['https://a/', 'complete', 1.0]
+        self.assertFalse(qc_browser.settle(Still(), {'seq': 0, 'state': ['https://a/', 'complete', 1.0]}))
 
 
 class BrowserTests(unittest.TestCase):
