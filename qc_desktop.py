@@ -268,3 +268,25 @@ def alive(element):
         return (element.raw.GetCurrentPropertyValue(P_NAME) or '').strip() == element.name
     except Exception:
         return False
+
+
+def list_windows(limit=12):
+    """Titles of visible top-level app windows, front to back."""
+    import ctypes
+    from ctypes import wintypes
+    GW_OWNER, WS_EX_TOOLWINDOW, GWL_EXSTYLE = 4, 0x80, -20
+    user32.GetWindow.restype = wintypes.HWND
+    user32.GetWindowLongW.restype = ctypes.c_long
+    callback = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    titles = []
+
+    @callback
+    def visit(hwnd, _):
+        if (user32.IsWindowVisible(hwnd) and not user32.GetWindow(hwnd, GW_OWNER)
+                and not user32.GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW):
+            title = window_title(hwnd).strip()
+            if title and title not in ('Program Manager', 'Windows Input Experience') and title not in titles:
+                titles.append(title)
+        return len(titles) < limit
+    user32.EnumWindows(visit, 0)
+    return titles
