@@ -29,8 +29,8 @@ STEP_HELP = (
     '{"click": T} | {"fill": T, "text": "..."} (replaces the field value) | '
     '{"select": T, "option": "label"} (native select/combobox) | {"check": T, "on": true} | '
     '{"press": "Enter"} (keys: Enter, Tab, Escape, ArrowDown, ctrl+a, ...) | '
-    '{"type": "text"} (into the focused element) | {"goto": "https://..."} (browser) | '
-    '{"window": "title"} (desktop: switch to window) | '
+    '{"type": "text"} (types into whatever has focus, in any app, e.g. Calculator "12+3=") | {"goto": "https://..."} (browser) | '
+    '{"window": "title"} (bring another app to the front; later steps act on it, and one plan can go browser -> Calculator -> browser) | '
     '{"wait": {"text": "..."} or {"url": "..."} or {"window": "..."}, "timeout": 10} | '
     '{"expect": {"text": "..."} or {"url": "..."}} (stop the plan if false) | '
     '{"scroll": "down"} | {"find": "words"} (returns matching page text) | '
@@ -74,7 +74,7 @@ def _foreground_kind():
 
 # ---------------------------------------------------------------- browser
 
-def browser_observe(all_elements=False, max_text=1500, find=None):
+def browser_observe(all_elements=False, max_text=1500, find=None, context=True):
     page = BROWSER.connect()
     data, ms = cdp.observe(page, all_elements, max_text)
     tabs = [('* ' if tid == page.target_id else '') + title[:50] for tid, title in BROWSER.tabs()]
@@ -82,10 +82,96 @@ def browser_observe(all_elements=False, max_text=1500, find=None):
     if find:
         hits = page.lib(f'find({json.dumps(find)}, 6)')
         text += f'\nFind "{find}": ' + (' || '.join(hits) if hits else 'no matches')
+    if context:
+        import qc_desktop as desk
+        # The main Chrome window shows the active tab's title; a popup in front does not.
+        hwnd = desk.find_window(f"{data['title']} - Google Chrome") if data.get('title') else None
+        BROWSER_HWND['hwnd'] = hwnd or BROWSER_HWND.get('hwnd') or desk.foreground_hwnd()
+        extra = context_lines(desk.window_title(BROWSER_HWND['hwnd']), browser=True)
+        if extra:
+            text += '\n' + extra
     return text
 
 
 TARGET_KEYS = ('click', 'fill', 'select', 'check', 'scroll')
+
+
+def chrome_ui(limit=40):
+    """Chrome's own buttons and popups (toolbar, extension dialogs, menus).
+
+    Chrome keeps page content out of UIA unless asked, so this is just the
+    browser frame: a few dozen elements in tens of milliseconds. Runs on the
+    UIA thread. Includes a popup window when one is in front.
+    """
+    import qc_desktop as desk
+    seen, names = set(), []
+    for hwnd in dict.fromkeys([desk.foreground_hwnd(), *[h for h in [BROWSER_HWND.get('hwnd')] if h]]):
+        try:
+            elements = _chrome_frame_elements(hwnd)
+        except Exception:
+            continue
+        for element in elements:
+            if element.role in ('tabitem',) or not element.name or element.name in seen:
+                continue
+            if element.name in ('Minimize', 'Maximize', 'Restore', 'Close'):
+                continue
+            seen.add(element.name)
+            names.append(element.name)
+    return names[:limit]
+
+
+def _chrome_frame_elements(hwnd, limit=600):
+    """A Chrome window's own controls. Once a UIA client has asked, Chrome also
+    exposes the page, so drop everything inside the page's document area."""
+    import qc_desktop as desk
+    elements, _ = desk.scan(hwnd, limit=limit)
+    pages = [e.rect for e in elements if e.role == 'document']
+
+    def inside(rect):
+        return any(p[0] <= rect[0] and p[1] <= rect[1] and rect[2] <= p[2] and rect[3] <= p[3] for p in pages)
+    return [e for e in elements if e.role != 'document' and not inside(e.rect)]
+
+
+def other_windows(current):
+    import qc_desktop as desk
+    return [t for t in desk.list_windows() if t != current][:10]
+
+
+def context_lines(current_title, browser=False):
+    lines = []
+    if browser:
+        ui = chrome_ui()
+        if ui:
+            lines.append('Chrome UI (click by label, e.g. {"click": "Extensions"}): ' + ' | '.join(ui))
+    windows = other_windows(current_title)
+    if windows:
+        lines.append('Other windows (switch with {"window": "title"}): ' + ' | '.join(w[:40] for w in windows))
+    return '\n'.join(lines)
+
+
+def _chrome_ui_click(target):
+    """Click a label that is not in the page but in Chrome's own UI."""
+    import qc_desktop as desk
+    want = target if isinstance(target, dict) else {'text': str(target)}
+    want = {'name': want.get('text') or want.get('name', ''), **({'nth': want['nth']} if 'nth' in want else {})}
+    for hwnd in dict.fromkeys([desk.foreground_hwnd(), BROWSER_HWND.get('hwnd')]):
+        if not hwnd:
+            continue
+        elements = _chrome_frame_elements(hwnd)
+        try:
+            element = desk.match(elements, want)
+        except LookupError:
+            continue
+        if element.role in ('button', 'menuitem', 'splitbutton', 'link', 'listitem') and desk.invoke(element):
+            time.sleep(0.15)
+            return element
+        _desktop_click(element)
+        time.sleep(0.15)
+        return element
+    return None
+
+
+BROWSER_HWND = {}
 
 
 def _target(step, key):
@@ -98,7 +184,7 @@ def _target(step, key):
     if isinstance(target, str):
         return {'text': target}
     if isinstance(target, dict):
-        return {k: target[k] for k in ('text', 'name', 'role', 'nth', 'near') if k in target}
+        return {k: target[k] for k in ('text', 'name', 'role', 'nth', 'near', 'in') if k in target}
     raise ValueError(f'{key} needs an element number or a label')
 
 
@@ -123,7 +209,19 @@ def browser_step(page, step, record):
         target = _target(step, 'click')
         before = page.mark()
         tabs_before = BROWSER.tab_ids()
-        point = page.lib(f'point({js(target)})')
+        try:
+            if isinstance(target, dict) and target.get('in') == 'chrome':
+                raise cdp.CDPError('No element matches in the page (Chrome UI requested)')
+            point = page.lib(f'point({js({k: v for k, v in target.items() if k != "in"} if isinstance(target, dict) else target)})')
+        except cdp.CDPError as error:
+            if 'No element matches' not in str(error) or isinstance(target, int):
+                raise
+            element = _chrome_ui_click(target)
+            if element is None:
+                raise RuntimeError(f'{error} (not in the page or Chrome\'s own UI)') from None
+            record({'text': element.name, 'in': 'chrome'})
+            opened = BROWSER.follow_new_tab(tabs_before)
+            return f'clicked Chrome {element.role} "{element.name}"' + (f' -> opened tab "{opened}"' if opened else '')
         if not point['ok']:
             raise RuntimeError(f'"{point["name"]}" is covered by {point["blocker"]}; not clicked')
         record(page.lib('describeLast()'))
@@ -288,7 +386,10 @@ def desktop_observe(window=None, max_text=1500):
     elements, texts = desk.scan(hwnd)
     ms = (time.perf_counter() - started) * 1000
     _desktop_cache.update(hwnd=hwnd, elements=elements)
-    return desk.describe(elements, texts, desk.window_title(hwnd), max_text, ms)
+    title = desk.window_title(hwnd)
+    text = desk.describe(elements, texts, title, max_text, ms)
+    extra = context_lines(title)
+    return text + ('\n' + extra if extra else '')
 
 
 def _bring_to_front(hwnd):
@@ -475,6 +576,18 @@ def _recorded(step, descriptor):
     return original
 
 
+BROWSER_ONLY = ('tab', 'goto', 'find')
+
+
+def front_kind():
+    """'browser' when the debug Chrome is in front, else 'desktop'. UIA thread."""
+    import qc_desktop as desk
+    kind, hwnd = _foreground_kind()
+    if kind == 'chrome' and BROWSER.front_tab(desk.window_title(hwnd)):
+        return 'browser'
+    return 'desktop'
+
+
 def run_plan(steps, *, kind, checkpoint, get_desktop, save_as=None, description='', variables=None):
     recorded, log = [], []
     started = time.perf_counter()
@@ -484,10 +597,16 @@ def run_plan(steps, *, kind, checkpoint, get_desktop, save_as=None, description=
         step_started = time.perf_counter()
         notes = []
         try:
-            if kind == 'browser':
+            # One plan can cross apps: browser-only steps go to the browser,
+            # and after switching windows the front app decides the kind.
+            if any(key in step for key in BROWSER_ONLY):
+                kind = 'browser'
+            if kind == 'browser' and 'window' not in step:
                 outcome = browser_step(BROWSER.connect(), step, notes.append)
             else:
                 outcome = desktop_step(step, notes.append, get_desktop)
+                if 'window' in step and get_desktop is not None:
+                    kind = front_kind()
             if notes:
                 recorded.append(_recorded(step, notes[0]))
             log.append(f'{index + 1}. {outcome} ({(time.perf_counter() - step_started) * 1000:.0f} ms)')
@@ -533,15 +652,16 @@ def register(mcp, *, get_desktop, get_analytics):
         'app="auto" uses the browser view when Chrome is in front, else the foreground window; '
         'window="title" observes another desktop window. find="words" also returns page text '
         'around each match (good for reading facts). all=true includes off-screen elements. '
-        'Browser popups outside the page (extension install, permission prompts, the tab strip) '
-        'are not in the page view: use app="desktop" for those. Also lists saved routines.'),
+        'In Chrome it also lists Chrome\'s own buttons and popups (toolbar, extension dialogs), '
+        'which Act can click by label, and the other open windows, which Act can switch to with '
+        '{"window": "title"}. Also lists saved routines.'),
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False,
                                     idempotentHint=True, openWorldHint=False))
     async def observe_tool(app: str = 'auto', window: str | None = None, find: str | None = None,
                            all: bool = False, max_text: int = 1500) -> str:
         kind = 'desktop' if window else await pick_kind(app)
         if kind == 'browser':
-            text = await asyncio.to_thread(browser_observe, all, max_text, find)
+            text = await uia(browser_observe, all, max_text, find)
         else:
             text = await uia(desktop_observe, window, max_text)
         routines = routine_names()
@@ -553,7 +673,9 @@ def register(mcp, *, get_desktop, get_analytics):
         'QuickControl: run a WHOLE PLAN of steps in one call, then get the new Observe view back. '
         'Plan the full task from one observation; each step is checked and the plan stops at the '
         'first failure, reporting what happened. Prefer {"text": label} targets for elements on '
-        'later pages, since numbers only refer to the latest observation. ' + STEP_HELP +
+        'later pages, since numbers only refer to the latest observation. In the browser, a click '
+        'label not found in the page is looked up in Chrome\'s own UI (Add extension, Extensions, '
+        'Pin); force it with {"text": "Extensions", "in": "chrome"}. To use another app, start with {"window": "Calculator"} and app="desktop". ' + STEP_HELP +
         ' Optional: save_as="name" stores a successful plan as a reusable routine, with {{var}} '
         'placeholders allowed in text/option values; routine="name" + vars={...} replays one. '
         'observe=false skips the returned view.'),
@@ -577,19 +699,14 @@ def register(mcp, *, get_desktop, get_analytics):
         prepared = prepare(steps, variables)
         kind = await pick_kind(app)
         checkpoint = get_controller().checkpoint_current
-        if kind == 'browser':
-            failed, log, total = await asyncio.to_thread(
-                run_plan, prepared, kind=kind, checkpoint=checkpoint, get_desktop=get_desktop,
-                save_as=save_as, description=description, variables=variables)
-        else:
-            failed, log, total = await uia(
-                run_plan, prepared, kind=kind, checkpoint=checkpoint, get_desktop=get_desktop,
-                save_as=save_as, description=description, variables=variables)
+        failed, log, total = await uia(
+            run_plan, prepared, kind=kind, checkpoint=checkpoint, get_desktop=get_desktop,
+            save_as=save_as, description=description, variables=variables)
         status = 'all steps done' if failed is None else f'stopped at step {failed + 1}'
         text = f'Act ({kind}): {status} in {total:.0f} ms\n' + '\n'.join(log)
         if observe or failed is not None:
             if kind == 'browser':
-                view = await asyncio.to_thread(browser_observe, False, 1200, None)
+                view = await uia(browser_observe, False, 1200, None)
             else:
                 view = await uia(desktop_observe, None, 1200)
             text += '\n--- now ---\n' + view
