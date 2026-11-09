@@ -117,6 +117,16 @@ class PlanTests(unittest.TestCase):
                          {'text': 'Add', 'near': 'Onesie'})
 
 
+    def test_one_plan_crosses_between_browser_and_desktop(self):
+        seen = []
+        with mock.patch.object(agent_tools, 'browser_step', lambda p, s, r: seen.append(('browser', s.get('_orig'))) or 'ok'),              mock.patch.object(agent_tools, 'desktop_step', lambda s, r, g: seen.append(('desktop', s.get('_orig'))) or 'ok'),              mock.patch.object(agent_tools, 'front_kind', lambda: 'desktop'),              mock.patch.object(agent_tools.BROWSER, 'connect', lambda: None):
+            failed, _, _ = agent_tools.run_plan(agent_tools.prepare(
+                [{'click': 'Login'}, {'window': 'Calculator'}, {'type': '1+2='}, {'tab': 'TodoMVC'}, {'click': 'Add'}], {}),
+                kind='browser', checkpoint=lambda: None, get_desktop=object())
+        self.assertIsNone(failed)
+        self.assertEqual([k for k, _ in seen], ['browser', 'desktop', 'desktop', 'browser', 'browser'])
+
+
 class SettleTests(unittest.TestCase):
     class SlowServerPage:
         """Navigation requested at once, URL changes only after a slow response."""
