@@ -35,6 +35,47 @@ session across a bounded batch and saves timings and results. Directly exposed
 MCP tools already keep a connection open; client reuse adds no new advantage
 there. Client batches and the server-side Sequence tool are separate mechanisms.
 
+## Agent tools: fewer turns instead of faster keys
+
+[`agent_server.py`](../agent_server.py), now the default profile, adds four tools from
+[`agent_tools.py`](../agent_tools.py). They target the cost that dominates a real
+agent session: model turns spent looking at screenshots and placing coordinates.
+
+- **Observe** returns a numbered text list of the active app's interactive elements,
+  their values, checked states and the options of every native dropdown, plus the
+  visible text. In Chrome it reads the page through the local DevTools port in a few
+  milliseconds ([`qc_browser.py`](../qc_browser.py)). For native windows it fetches
+  every property in one UIA `FindAllBuildCache` call ([`qc_desktop.py`](../qc_desktop.py))
+  instead of one cross-process call per property. `find="words"` returns page text
+  around each match, which answers most lookup questions without scrolling.
+- **Act** runs a whole plan: up to 40 steps of click, fill, select, check, press,
+  type, goto, wait, expect, scroll and find. Targets are either element numbers
+  from the latest Observe or labels (`{"text": "Add to cart", "near": "Onesie"}`)
+  that are resolved again on each page, so one plan can cross page loads. Each
+  step is checked; the plan stops at the first failure, retries nothing, and
+  returns the new Observe view so the agent does not need another look.
+- **SurveyMenus** opens several custom dropdowns in one call, lists what each one
+  offers (optionally with a cropped picture of each open menu), and closes them.
+  Native `<select>` options already appear in Observe without opening anything.
+- **OpenBrowser** starts a Chrome with a dedicated QuickControl profile and a local
+  debugging port, so Observe and Act can use the fast path.
+
+Browser input goes through `Input.dispatchMouseEvent` and `Input.insertText`, which
+Chrome treats as trusted user input, so framework event handlers fire normally.
+Before clicking, Act hit-tests the target point and refuses to click when another
+element (a cookie banner, an ad) covers it. Desktop clicks prefer UIA Invoke for
+buttons and menu items; fills prefer ValuePattern and fall back to native typing.
+Act calls the upstream control checkpoint before every step, so double-Escape
+takeover still stops a plan.
+
+`Act(save_as="name")` stores a successful plan as a routine, with `{{var}}`
+placeholders for values. Observe lists saved routines, and
+`Act(routine="name", vars={...})` replays one with no planning at all.
+
+The debugging port is bound to localhost and only used for a dedicated profile.
+It still lets any local process drive that browser, so do not sign in to accounts
+you care about in the QuickControl profile.
+
 ## Ownership, interruption, and failures
 
 Native input checks request cancellation and control ownership before bounded
