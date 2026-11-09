@@ -15,6 +15,9 @@ run was checked against the actual page or display:
 | **QuickControl with Observe and Act** | **12/12** | **7.1 s** | **4** |
 
 On a clean rerun of the shop checkout, stock took 182.7 s and QuickControl 9.1 s.
+Harder tasks that move between tabs, between Chrome and Calculator, and into Chrome's
+own install popup and toolbar also pass. The browser-to-Calculator task takes 12 to 14 s
+against 45 s on stock, and installing and pinning an extension takes 17 to 27 s against 61 s.
 Times include the model's thinking. [Full report](measurements/agent-bench.md)
 
 [![Registration form, before and after the agent tools](assets/agent-demoqa-poster.png)](assets/agent-demoqa-demo.mp4)

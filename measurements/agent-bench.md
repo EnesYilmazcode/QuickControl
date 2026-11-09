@@ -40,6 +40,47 @@ tools in total, and the model is now 64% of the time. That is why replaying a
 saved routine did not help much (below): the remaining cost is the model reading
 and answering, not the desktop.
 
+## Harder tasks: tabs, two apps, installing something
+
+The six tasks above are mostly one form on one page. These three move around:
+
+- **Tabs:** look up two facts in two new Wikipedia tabs, keep them open, and go back
+  to TodoMVC to add both as todos.
+- **Browser to Calculator:** log in to the shop, add up all six prices in Windows
+  Calculator (the total must stay on its display), then add the total as a todo in
+  a second tab.
+- **Install:** install JSON Formatter from the Chrome Web Store and pin it to the
+  toolbar. Checked by reading the profile on disk: the extension folder exists and
+  Chrome's preferences list it as pinned.
+
+| Task | Windows MCP | QuickControl v1 | Agent tools, first try | Agent tools after the fixes below |
+| --- | ---: | ---: | ---: | ---: |
+| Tabs | 48.0 s, 30 calls | 27.8 s, 17 calls | **9.9 s, 2 calls** | |
+| Browser to Calculator | 45.2 s, 31 calls | 79.8 s, 22 calls | 68.2 s, 18 calls | **12.0 s and 14.3 s, 4 to 5 calls** |
+| Install and pin an extension | 61.4 s, 30 calls | 36.6 s, 10 calls | 36.9 s, 11 calls | **27.3 s and 17.0 s, 5 to 8 calls** |
+
+Every run passed. Stock and v1 got one run each here, so treat their numbers as rough.
+
+The first try lost on two of the three, and the traces showed why. Observe and Act
+only saw inside the web page:
+
+- Chrome's own install popup and its Extensions menu were invisible, so the agent
+  fell back to screenshots.
+- Other apps were invisible too: the agent spent six calls finding Calculator.
+- A plan could not cross apps, so going from the browser to Calculator and back took
+  a separate call for each move.
+
+Three changes fixed that:
+
+- **Chrome's own UI:** a click label not found in the page is looked up in Chrome's
+  own buttons and popups, through UIA, in tens of milliseconds. The browser view
+  lists them. The whole install is now four clicks in text: Add to Chrome, Add
+  extension, Extensions, Pin JSON Formatter.
+- **Other windows:** Observe lists the other open windows.
+- **Plans that cross apps:** a plan switches between browser and desktop steps on its
+  own. `{"window": "Calculator"}, {"type": "29.99+9.99+...="}` and then
+  `{"tab": "TodoMVC"}` all run in one Act.
+
 ## A clean rerun of the shop task
 
 Chrome's breach warning for the demo store's public password appeared in the
