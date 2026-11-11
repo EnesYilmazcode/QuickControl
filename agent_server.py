@@ -4,10 +4,12 @@ from rapid_input import install as install_input
 from sequence_tool import install as install_sequence
 from uia_context import install as install_context
 from agent_tools import install as install_agent
+from glide import install as install_glide
 
 install()
 install_context()
 install_input()
+install_glide()
 install_sequence()
 install_agent()
 
